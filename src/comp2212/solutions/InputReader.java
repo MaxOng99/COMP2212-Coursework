@@ -13,7 +13,7 @@ public class InputReader {
         RandomAccessFile reader = new RandomAccessFile(input, "rw");
 
         String st = reader.readLine();
-        for (int i = 0; i < st.length(); i++) {
+        for (int i = 0; i < st.replaceAll(" ", "").length(); i++) {
             inputList.add(new ArrayList<Integer>());
         }
 
