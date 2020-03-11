@@ -1,0 +1,10 @@
+Int[][] in = sequences
+Int[] first = in.pop
+Int[] second = in.pop
+Int[] shuffle
+while (not first.empty) {
+shuffle.push(first.pop)
+shuffle.push(first.pop)
+shuffle.push(second.pop)
+}
+return shuffle

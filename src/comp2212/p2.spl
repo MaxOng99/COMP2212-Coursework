@@ -1,0 +1,17 @@
+Int[][] in = sequences
+Int[] first = in.pop
+Int[] second = in.pop
+Int[] third = in.pop
+Int[] shuffle
+
+while (first.length > 0) {
+Int a = first.pop
+Int b = second.pop
+Int c = third.pop
+shuffle.push(c)
+shuffle.push(b)
+shuffle.push(a)
+shuffle.push(a + b)
+shuffle.push(b + c)
+}
+return shuffle
