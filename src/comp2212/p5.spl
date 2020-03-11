@@ -5,7 +5,9 @@ Int[] outputList = []
 Int sum = 0
 
 while (not firstList.empty) {
-	sum = sum + firstList.pop
+
+	Int a = firstList.pop
+	sum = sum + a
 	outputList.push(sum)
 }
 

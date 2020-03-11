@@ -7,14 +7,21 @@ if (secondList.size >= 2) {
 	shuffleList.push(0)
 	
 	secondList.pop
-	shuffleList.push(secondList.pop)
-	shuffleList.push(firstList.pop)
+
+	Int a = secondList.pop
+	Int b = firstList.pop
+	shuffleList.push(a)
+	shuffleList.push(b)
 
 	while (secondList.size >= 3) {
 		
 		secondList.pop
-		shuffleList.push(secondList.pop)
-		shuffleList.push(firstList.pop)
+
+		Int c = secondList.pop
+		Int d = firstList.pop
+
+		shuffleList.push(c)
+		shuffleList.push(d)
 	}
 }
 
