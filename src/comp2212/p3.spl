@@ -1,0 +1,19 @@
+Int[][] in = sequences
+Int[] firstList = in.pop
+int[] secondList = in.pop
+Int[] shuffleList = []
+
+if (secondList.size >= 2) {
+	shuffleList.push(0)
+	
+	secondList.pop
+	shuffleList.push(secondList.pop)
+	shuffleList.push(firstList.pop)
+
+	while (secondList.size >= 3) {
+		
+		secondList.pop
+		shuffleList.push(secondList.pop)
+		shuffleList.push(firstList.pop)
+	}
+}
