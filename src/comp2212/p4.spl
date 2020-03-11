@@ -1,0 +1,15 @@
+Int[][] in = sequences
+Int[] firstList = in.pop
+Int[] outputList = []
+
+while (firstList.size >= 3) {
+	Int num1 = firstList.pop
+	Int num2 = firstList.pop
+	int num3 = firstList.pop
+
+	outputList.push(num3)
+	outputList.push(num2*2)
+	outputList.push(num1*3-1)
+}
+
+return outputList
