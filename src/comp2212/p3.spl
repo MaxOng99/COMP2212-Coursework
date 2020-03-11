@@ -17,3 +17,5 @@ if (secondList.size >= 2) {
 		shuffleList.push(firstList.pop)
 	}
 }
+
+return shuffleList
