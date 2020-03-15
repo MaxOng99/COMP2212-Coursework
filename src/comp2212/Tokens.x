@@ -30,12 +30,15 @@ $white+       ;
   \>          { \p -> \s -> TokenGT p }
   \<\=        { \p -> \s -> TokenLTE p }
   \>\=        { \p -> \s -> TokenGTE p }
+  not         { \p -> \s -> TokenNot p }
   \+          { \p -> \s -> TokenPlus p }
   \-          { \p -> \s -> TokenMinus p }
   \*          { \p -> \s -> TokenTimes p }
   \/          { \p -> \s -> TokenDiv p }
   \(          { \p -> \s -> TokenLParen p }
   \)          { \p -> \s -> TokenRParen p }
+  \{          { \p -> \s -> TokenLCurly p }
+  \}          { \p -> \s -> TokenRCurly p }
   Int\[\]     { \p -> \s -> TokenList p }
   \[\]        { \p -> \s -> TokenEmptyList p }
   Int\[\]\[\] { \p -> \s -> TokenLists p }
@@ -71,11 +74,14 @@ data Token =
   TokenDiv AlexPosn            |
   TokenLParen AlexPosn         |
   TokenRParen AlexPosn         |
+  TokenLCurly AlexPosn         |
+  TokenRCurly AlexPosn         |
   TokenEmptyList AlexPosn      |
   TokenList AlexPosn           |
   TokenLists AlexPosn          |
   TokenSequences AlexPosn      |
-  TokenVar String AlexPosn     
+  TokenVar String AlexPosn     |
+  TokenNot AlexPosn
   deriving (Eq,Show)
 
 tokenPosn :: Token -> String
@@ -107,4 +113,7 @@ tokenPosn (TokenList (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLists (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenVar _ (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenEmptyList (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenNot (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenLCurly (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenRCurly (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 }

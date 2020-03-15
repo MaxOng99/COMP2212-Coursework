@@ -25,12 +25,15 @@ import Tokens
     '>'    { TokenGT _ }
     '<='   { TokenLTE _ }
     '>='   { TokenGTE _ }
+    not    { TokenNot _ }
     '+'    { TokenPlus _ }
     '-'    { TokenMinus _ }
     '*'    { TokenTimes _ }
     '/'    { TokenDiv _ }
     '('    { TokenLParen _ } 
     ')'    { TokenRParen _ }
+    '{'    { TokenLCurly _ }
+    '}'    { TokenRCurly _ }
     '[]'   { TokenEmptyList _ }
     'Int[]' { TokenList _ }
     'Int[][]' { TokenLists _ }
@@ -39,28 +42,32 @@ import Tokens
     sequences { TokenSequences _ } 
 
 %nonassoc while
-%nonassoc '(' ')'  
+%nonassoc '(' ')' '{' '}'
 %nonassoc if
 %nonassoc else
 %nonassoc '='
 %left '<' '<=' '>=' '>'
 %left '+' '-'
 %left '*' '/'
+%right not
 %nonassoc length push pop empty
 %nonassoc digit true false var 'Int[]' 'Int[][]' sequences '[]' newline
 
 %% 
 
-Construct : if '('Exp')' newline Construct newline else newline Construct    { IfThenElse $3 $6 $10 }
-          | while '('Exp')' newline Construct                                  { While $3 $6 }
-          | Int var '=' Exp                                                     { IntDeclare $2 $4 }
-          | Bool var '=' Exp                                                    { BoolDeclare $2 $4 }
-          | 'Int[]' var '=' '[]'                                                { SingleListDeclare $2 }
+Construct : if '('Exp')' '{' newline Construct newline '}' else '{' newline Construct newline '}' { IfThenElse $3 $7 $13 }
+          | while '('Exp')' '{' newline Construct newline '}'                                     { While $3 $7 }
+          | Int var                                                             { IntDeclare $2 }
+          | Bool var                                                            { BoolDeclare $2 }
+          | var '=' Exp                                                         { VarAssign $1 $3 }
+          | 'Int[]' var '=' '[]'                                                { NewSingleList $2 }
+          | var '=' StackOperations                                             { SingleListAssign $1 $3 }
           | 'Int[][]' var '=' Exp                                               { DoubleListDeclare $2 $4 }
-          | var push '('Exp')'                                                  { Push $1 $4 }
-          | var pop                                                             { Pop $1 }
           | return var                                                          { Return $2 }
           | Construct newline Construct                                         { Newline $1 $3 }
+
+StackOperations : var push '('Exp')'                                            { Push $1 $4 }
+                | var pop                                                       { Pop $1 }
 
 Exp : digit             { Int $1 }
     | true              { T }
@@ -78,6 +85,7 @@ Exp : digit             { Int $1 }
     | Exp '>=' Exp      { GTE $1 $3 }
     | Exp '<=' Exp      { LTE $1 $3 }
     | '('Exp')'         { $2 }
+    | not Exp           { Not $2 }
 
 {
 
@@ -87,15 +95,19 @@ parseError (t:ts) = error ("Parse error at line:column " ++ (tokenPosn t))
 
 data Construct = IfThenElse Exp Construct Construct
                | While Exp Construct 
-               | IntDeclare String Exp 
-               | BoolDeclare String Exp
-               | SingleListDeclare String
+               | IntDeclare String 
+               | BoolDeclare String
+               | VarAssign String Exp
+               | NewSingleList String
+               | SingleListAssign String StackOperations
                | DoubleListDeclare String Exp
-               | Push String Exp
-               | Pop String
                | Return String
                | Newline Construct Construct
                deriving (Show, Eq)
+
+data StackOperations = Push String Exp
+                     | Pop String
+                     deriving (Show, Eq)
 
 data Exp = Int Int
          | T
@@ -112,5 +124,6 @@ data Exp = Int Int
          | GreaterThan Exp Exp
          | GTE Exp Exp
          | LTE Exp Exp
+         | Not Exp
          deriving (Show, Eq)
 }
