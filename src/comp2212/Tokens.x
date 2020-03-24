@@ -24,7 +24,8 @@ $white+       ;
   return      { \p -> \s -> TokenReturn p }
   true        { \p -> \s -> TokenTrue p }
   false       { \p -> \s -> TokenFalse p } 
-  $digit+     { \p -> \s -> TokenInt (read s) p } 
+  $digit+     { \p -> \s -> TokenInt (read s) p }
+  \[ [$digit \,]* $digit \] { \p -> \s -> TokenSequence s p } 
   \=          { \p -> \s -> TokenEq p }
   \<          { \p -> \s -> TokenLT p }
   \>          { \p -> \s -> TokenGT p }
@@ -49,7 +50,7 @@ $white+       ;
 -- Each action has type :: AlexPosn -> String -> Token 
 -- The token type: 
 data Token = 
-  TokenNewLine AlexPosn         |
+  TokenNewLine AlexPosn        |
   TokenLength AlexPosn         |
   TokenPush AlexPosn           |
   TokenPop AlexPosn            |
@@ -63,6 +64,7 @@ data Token =
   TokenTrue AlexPosn           |
   TokenFalse AlexPosn          |
   TokenInt Int AlexPosn        |
+  TokenSequence String AlexPosn|
   TokenEq AlexPosn             |
   TokenLT AlexPosn             |
   TokenGT AlexPosn             |
@@ -98,6 +100,7 @@ tokenPosn (TokenReturn (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenTrue  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenFalse  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenInt _ (AlexPn a l c) ) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenSequence _ (AlexPn a l c) ) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenEq  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLT  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenGT (AlexPn a l c)) = show(l) ++ ":" ++ show(c)

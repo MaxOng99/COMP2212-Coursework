@@ -20,6 +20,7 @@ import Tokens
     true   { TokenTrue _ }
     false  { TokenFalse _ }
     digit  { TokenInt $$ _ }
+    list   { TokenSequence $$ _ }
     '='    { TokenEq _ }
     '<'    { TokenLT _ }
     '>'    { TokenGT _ }
@@ -51,7 +52,7 @@ import Tokens
 %left '*' '/'
 %right not
 %nonassoc length push pop empty
-%nonassoc digit true false var 'Int[]' 'Int[][]' sequences '[]' newline
+%nonassoc digit true false var 'Int[]' 'Int[][]' sequences '[]' newline list
 
 %% 
 
@@ -60,8 +61,8 @@ Construct : if '('Exp')' '{' newline Construct newline '}' else '{' newline Cons
           | Int var                                                             { IntDeclare $2 }
           | Bool var                                                            { BoolDeclare $2 }
           | var '=' Exp                                                         { VarAssign $1 $3 }
-          | 'Int[]' var '=' '[]'                                                { NewSingleList $2 }
           | var '=' StackOperations                                             { SingleListAssign $1 $3 }
+          | 'Int[]' var '=' '[]'                                                { NewSingleList $2 }
           | 'Int[][]' var '=' Exp                                               { DoubleListDeclare $2 $4 }
           | return var                                                          { Return $2 }
           | Construct newline Construct                                         { Newline $1 $3 }
@@ -70,9 +71,10 @@ StackOperations : var push '('Exp')'                                            
                 | var pop                                                       { Pop $1 }
 
 Exp : digit             { Int $1 }
-    | true              { T }
-    | false             { F }
+    | true              { BoolTrue }
+    | false             { BoolFalse }
     | var               { Var $1 }
+    | list              { List $1 }
     | sequences         { Sequences }
     | var length        { Length $1 }
     | var empty         { Empty $1 }
@@ -110,9 +112,10 @@ data StackOperations = Push String Exp
                      deriving (Show, Eq)
 
 data Exp = Int Int
-         | T
-         | F
+         | BoolTrue
+         | BoolFalse
          | Var String
+         | List String
          | Sequences
          | Length String
          | Empty String
