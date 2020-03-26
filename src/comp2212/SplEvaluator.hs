@@ -10,6 +10,58 @@ data Types = SplInt | SplBool | SplSingleList | SplDoubleList
 type Environment = [(Types, String, Exp)]
 type State = (Construct, [Construct], Environment)
 
+
+evalConstruct :: State -> State
+
+evalConstruct ()
+
+-- IfThenElse Evaluation
+evalConstruct ((IfThenElse exp c1 c2), rest, e) -- change variable names lol and also create format function
+    | evalExp exp e == BoolTrue  = evalConstruct ((head new_cons1), (tail new_cons1), e)
+    | otherwise = evalConstruct ((head new_cons2), (tail new_cons2), e) where
+        cons1_list = format c1
+        cons2_list = format c2
+        new_cons1 = cons1_list ++ rest
+        new_cons2 = cons2_list ++ rest
+
+-- While Evaluation
+evalConstruct ((While exp c), rest, e)
+    | evalExp exp e == BoolTrue = 
+    | otherwise = where
+        cons1_list = format c
+
+-- IntDeclare Evaluation [Choose between default 0 value or null]
+evalConstruct ((IntDeclare var), rest, e) = evalConstruct ((head rest), (tail rest), (SplInt, var, Int 0):e)
+
+-- BoolDeclare Evaluation [Choose between default BoolFalse or null]
+evalConstruct ((BoolDeclare var), rest, e) = evalConstruct ((head rest), (tail rest), (SplBool, var, BoolFalse):e)
+
+-- VarAssign Evaluation [Might not work] [Split evalconstructs]
+evalConstruct ((VarAssign var exp), rest, e)
+    | lookUpType var e == SplBool && (exp == BoolTrue || exp == BoolFalse) = evalConstruct ((head rest), (tail rest), update var exp e) 
+    | lookUpType var e == SplInt && exp == Int num = evalConstruct ((head rest), (tail rest), update var exp e)
+    | lookUpType var e == SplSingleList && exp == List list = evalConstruct ((head rest), (tail rest), update var exp e)
+    | lookUpType var e == SplDoubleList && exp == Sequences = evalConstruct ((head rest), (tail rest), update var exp e)
+    | otherwise = error "Wrong data type"
+
+-- NewSigleList Evaluation 
+evalConstruct ((NewSingleList var), rest, e) = evalConstruct ((head rest), (tail rest), (SplSingleList, var, List "[]"):e)
+
+-- SingleListAssign Push Evaluation
+evalConstruct ((SingleListAssign var1 (Push var2 exp)), rest, e) = evalConstruct ((head rest), (tail rest), updateList var1 var2 exp e)
+
+-- SingleListAssign Pop Evaluation
+evalConstruct ((SingleListAssign var1 (Pop var2)), rest, e) = evalConstruct
+
+-- DoubleListDeclare Evaluation
+evalConstruct ((DoubleListDeclare var exp), rest, e) = evalConstruct ((head rest), (tail rest), (SplDoubleList, var, exp):e)
+
+-- Return Evaluation
+evalConstruct ((Return var), rest, e)
+    | rest == [] && lookUpType var == SplSingleList = ((Return var), rest, e)
+    | otherwise = error "Stupid"
+
+
 evalExp :: Exp -> Environment -> Exp
 evalExp (Int num) e = (Int num)
 
@@ -67,8 +119,25 @@ evalExp (Not val) e =
     | otherwise = error "Not a valid boolean expression"
 evalExp (Not exp) e = evalExp (Not (evalExp exp e)) e
 
+-- change to lookUpValue
 lookUp :: String -> Environment -> Exp
 lookUp name env = get3rd (getVarTuple name env)
+
+lookUpType :: String -> Environment -> Types
+lookUpType name env = get1st (getVarTuple name env)
+
+update :: String -> Exp -> Environment -> Environment
+update var exp oldEnv = (lookUpType var oldEnv, var, exp):(delete var oldEnv))
+
+updateList :: String -> Exp -> Environment -> Environment
+updateList var 
+
+delete :: String -> Environment -> Environment
+delete _ [] = []
+delete var (x:xs)
+   | var == get2nd x = [] ++ (delete var xs)
+   | var /= get2nd x = [x] ++ (delete var xs) 
+
 
 getVarTuple :: String -> Environment -> (Type, String, Exp)
 getVarTuple name (x:xs)
@@ -76,8 +145,12 @@ getVarTuple name (x:xs)
     | name /= (get2nd x) = getVarTuple name xs
     | otherwise = error "No variable found"
 
+
 convertToHaskellList :: String -> [Int]
-convertToHaskellList stringList = convert [x | x <- stringList, x /= '[', x/=']', x/= ',']
+convertToHaskellList stringList
+    | length haskellList == 0 = [] 
+    | otherwise = haskellList where 
+    haskellList = convert [x | x <- stringList, x /= '[', x/=']', x/= ',]'
 
 convert :: String -> [Int]
 convert xs = [(read :: String -> Int) (charToString x) | x <- xs]
