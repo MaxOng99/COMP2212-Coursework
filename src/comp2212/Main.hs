@@ -5,9 +5,10 @@ import Tokens
 import Grammar
 
 main :: IO ()
-main = do line <- getLine
-          print (parseCalc (alexScanTokens line))
-          main
+main = do args <- getArgs
+          content <- readFile (head args)
+          print (parseCalc (alexScanTokens content))
+
 
           
 
