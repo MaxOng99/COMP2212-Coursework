@@ -19,14 +19,14 @@ evalExp (BoolFalse) e = (BoolFalse)
 
 evalExp (Var name) e = lookUp name e
 
-evalExp (List list) e = --Make List into Haskell list type noob cheng
+evalExp (List list) e = List list
 
 evalExp (Sequences) e = Sequences
 
-evalExp (Length name) e = Int (length (evalExp (lookUp name e)))
+evalExp (Length name) e = Int (length (convertToHaskellList (lookUp name e)))
 
 evalExp (Empty name) e =
-    | length (evalExp (lookUp name e)) == 0 = BoolTrue
+    | length (convertToHaskellList (lookUp name e)) == 0 = BoolTrue
     | otherwise = BoolFalse
 
 evalExp (Add (Int a) (Int b)) e = Int (a + b)
@@ -75,6 +75,15 @@ getVarTuple name (x:xs)
     | name == (get2nd x) = x
     | name /= (get2nd x) = getVarTuple name xs
     | otherwise = error "No variable found"
+
+convertToHaskellList :: String -> [Int]
+convertToHaskellList stringList = convert [x | x <- stringList, x /= '[', x/=']', x/= ',']
+
+convert :: String -> [Int]
+convert xs = [(read :: String -> Int) (charToString x) | x <- xs]
+
+charToString :: Char -> String
+charToString c = [c]
 
 get1st (a,_,_) = a
 
