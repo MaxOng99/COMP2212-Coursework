@@ -133,31 +133,30 @@ evalExp (Not val) e =
     | otherwise = error "Not a valid boolean expression"
 evalExp (Not exp) e = evalExp (Not (evalExp exp e)) e
 
--- Variable lookup function
+-- Lookup variable value function
 lookUp :: String -> Environment -> Exp
 lookUp name env = get3rd (getVarTuple name env)
 
--- Variable tuple get function
--- change to lookUpValue
-lookUp :: String -> Environment -> Exp
-lookUp name env = get3rd (getVarTuple name env)
-
+-- Lookup variable type function
 lookUpType :: String -> Environment -> Types
 lookUpType name env = get1st (getVarTuple name env)
 
+-- Update variable value within current environment
 update :: String -> Exp -> Environment -> Environment
 update var exp oldEnv = (lookUpType var oldEnv, var, exp):(delete var oldEnv))
 
+-- Update list function
 updateList :: String -> Exp -> Environment -> Environment
 updateList var 
 
+-- Delete variable from given environment
 delete :: String -> Environment -> Environment
 delete _ [] = []
 delete var (x:xs)
    | var == get2nd x = [] ++ (delete var xs)
    | var /= get2nd x = [x] ++ (delete var xs) 
 
-
+-- Variable tuple get function
 getVarTuple :: String -> Environment -> (Type, String, Exp)
 getVarTuple name (x:xs)
     | name == (get2nd x) = x
@@ -165,7 +164,6 @@ getVarTuple name (x:xs)
     | otherwise = error "No variable found"
 
 -- Convert String List to Haskell List Type
-
 convertToHaskellList :: String -> [Int]
 convertToHaskellList stringList
     | length haskellList == 0 = [] 
