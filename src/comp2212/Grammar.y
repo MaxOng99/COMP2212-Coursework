@@ -42,21 +42,16 @@ import Tokens
     newline { TokenNewLine _ }
     sequences { TokenSequences _ } 
 
-%nonassoc while
-%nonassoc '(' ')' '{' '}'
-%nonassoc if
-%nonassoc else
-%nonassoc '='
-%left '<' '<=' '>=' '>'
+%left newline
+%nonassoc '<' '<=' '>=' '>'
 %left '+' '-'
 %left '*' '/'
-%right not
-%nonassoc length push pop empty
-%nonassoc digit true false var 'Int[]' 'Int[][]' sequences '[]' newline list
+%nonassoc not
 
 %% 
 
-Construct : if '('Exp')' '{' newline Construct newline '}' else '{' newline Construct newline '}' { IfThenElse $3 $7 $13 }
+Construct : Construct newline Construct                                         { Newline $1 $3 }
+          | if '('Exp')' '{' newline Construct newline '}' else '{' newline Construct newline '}' { IfThenElse $3 $7 $13 }
           | while '('Exp')' '{' newline Construct newline '}'                                     { While $3 $7 }
           | Int var                                                             { IntDeclare $2 }
           | Bool var                                                            { BoolDeclare $2 }
@@ -65,29 +60,28 @@ Construct : if '('Exp')' '{' newline Construct newline '}' else '{' newline Cons
           | 'Int[]' var '=' '[]'                                                { NewSingleList $2 }
           | 'Int[][]' var '=' Exp                                               { DoubleListDeclare $2 $4 }
           | return var                                                          { Return $2 }
-          | Construct newline Construct                                         { Newline $1 $3 }
 
 StackOperations : var push '('Exp')'                                            { Push $1 $4 }
                 | var pop                                                       { Pop $1 }
 
-Exp : digit             { Int $1 }
+Exp : Exp '<' Exp       { LessThan $1 $3 }
+    | Exp '>' Exp       { GreaterThan $1 $3 }
+    | Exp '>=' Exp      { GTE $1 $3 }
+    | Exp '<=' Exp      { LTE $1 $3 }
+    | Exp '+' Exp       { Add $1 $3 }
+    | Exp '-' Exp       { Minus $1 $3 }
+    | Exp '*' Exp       { Multiply $1 $3 }
+    | Exp '/' Exp       { Divide $1 $3 }
+    | not Exp           { Not $2 }
+    | var length        { Length $1 }
+    | var empty         { Empty $1 }
+    | digit             { Int $1 }
     | true              { BoolTrue }
     | false             { BoolFalse }
     | var               { Var $1 }
     | list              { List $1 }
     | sequences         { Sequences }
-    | var length        { Length $1 }
-    | var empty         { Empty $1 }
-    | Exp '+' Exp       { Add $1 $3 }
-    | Exp '-' Exp       { Minus $1 $3 }
-    | Exp '*' Exp       { Multiply $1 $3 }
-    | Exp '/' Exp       { Divide $1 $3 }
-    | Exp '<' Exp       { LessThan $1 $3 }
-    | Exp '>' Exp       { GreaterThan $1 $3 }
-    | Exp '>=' Exp      { GTE $1 $3 }
-    | Exp '<=' Exp      { LTE $1 $3 }
     | '('Exp')'         { $2 }
-    | not Exp           { Not $2 }
 
 {
 

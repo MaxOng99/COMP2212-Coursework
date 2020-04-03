@@ -7,11 +7,12 @@ $digit = 0-9
 -- digits 
 $alpha = [a-zA-Z]    
 -- alphabetic characters
+$white = [\ \t\f\v\r]
 
 tokens :-
-$white+       ; 
-  "--".*        ; 
   \n          { \p -> \s -> TokenNewLine p }
+  $white+         ; 
+  "--".*          ;  
   \.length    { \p -> \s -> TokenLength p }
   \.push      { \p -> \s -> TokenPush p }
   \.pop       { \p -> \s -> TokenPop p }
