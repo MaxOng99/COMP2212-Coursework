@@ -10,18 +10,20 @@ data Types = SplInt | SplBool | SplSingleList | SplDoubleList
 type Environment = [(Types, String, Exp)]
 type State = (Construct, [Construct], Environment)
 
+evalLoop :: State -> String
+evalLoop state = value where
+    ((Return var), rest, env) = evalConstruct state
+    (type, var, value) = getVarTuple var env
+
 -- Single-step evaluation for expressions
-
 evalConstruct :: State -> State
-
-evalConstruct ()
-
 -- IfThenElse Evaluation
-evalConstruct ((IfThenElse exp c1 c2), rest, e) -- change variable names lol and also create format function
+evalConstruct ((IfThenElse exp c1 c2), rest, e) -- change variable names lol
     | evalExp exp e == BoolTrue  = evalConstruct ((head new_cons1), (tail new_cons1), e)
-    | otherwise = evalConstruct ((head new_cons2), (tail new_cons2), e) where
-        cons1_list = format c1
-        cons2_list = format c2
+    | otherwise = evalConstruct ((head new_cons2), (tail new_cons2), e) 
+    where
+        cons1_list = formatConstruct c1
+        cons2_list = formatConstruct c2
         new_cons1 = cons1_list ++ rest
         new_cons2 = cons2_list ++ rest
 
@@ -29,7 +31,7 @@ evalConstruct ((IfThenElse exp c1 c2), rest, e) -- change variable names lol and
 evalConstruct ((While exp c), rest, e)
     | evalExp exp e == BoolTrue = 
     | otherwise = where
-        cons1_list = format c
+        cons1_list = formatConstruct c
 
 -- IntDeclare Evaluation [Choose between default 0 value or null]
 evalConstruct ((IntDeclare var), rest, e) = evalConstruct ((head rest), (tail rest), (SplInt, var, Int 0):e)
@@ -41,11 +43,10 @@ evalConstruct ((BoolDeclare var), rest, e) = evalConstruct ((head rest), (tail r
 evalConstruct ((VarAssign var exp), rest, e)
     | lookUpType var e == SplBool && (exp == BoolTrue || exp == BoolFalse) = evalConstruct ((head rest), (tail rest), update var exp e) 
     | lookUpType var e == SplInt && exp == Int num = evalConstruct ((head rest), (tail rest), update var exp e)
-    | lookUpType var e == SplSingleList && exp == List list = evalConstruct ((head rest), (tail rest), update var exp e)
     | lookUpType var e == SplDoubleList && exp == Sequences = evalConstruct ((head rest), (tail rest), update var exp e)
     | otherwise = error "Wrong data type"
 
--- NewSigleList Evaluation 
+-- NewSingleList Evaluation 
 evalConstruct ((NewSingleList var), rest, e) = evalConstruct ((head rest), (tail rest), (SplSingleList, var, List "[]"):e)
 
 -- SingleListAssign Push Evaluation
@@ -177,6 +178,15 @@ convert xs = [(read :: String -> Int) (charToString x) | x <- xs]
 -- Converts character to list type
 charToString :: Char -> String
 charToString c = [c]
+
+-- Function which splits AST into a list of Constructs
+formatConstruct :: Construct -> [Construct]
+formatConstruct (Newline cons1 cons2) = formatConstruct cons1 ++ formatConstruct cons2
+formatConstruct x = [x]
+
+-- Parses source program and input number sequence and converts it into a state
+convertToState :: Construct -> [[Int]] -> State
+convertToState cons inpList = (head (formatConstruct cons), tail (formatConstruct cons), [])
 
 get1st (a,_,_) = a
 
