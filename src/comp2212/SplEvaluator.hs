@@ -3,6 +3,7 @@ module SplEvaluator where
 import Systems.Environment
 import Tokens
 import Grammar
+import Data.List
 
 data Types = SplInt | SplBool | SplSingleList | SplDoubleList
     deriving (Show, Eq)
@@ -19,7 +20,7 @@ evalLoop state = value where
 evalConstruct :: State -> State
 -- IfThenElse Evaluation
 evalConstruct ((IfThenElse exp c1 c2), rest, e) -- change variable names lol
-    | evalExp exp e == BoolTrue  = evalConstruct ((head new_cons1), (tail new_cons1), e)
+    | evalExp exp e == BoolTrue = evalConstruct ((head new_cons1), (tail new_cons1), e)
     | otherwise = evalConstruct ((head new_cons2), (tail new_cons2), e) 
     where
         cons1_list = formatConstruct c1
@@ -28,10 +29,10 @@ evalConstruct ((IfThenElse exp c1 c2), rest, e) -- change variable names lol
         new_cons2 = cons2_list ++ rest
 
 -- While Evaluation
-evalConstruct ((While exp c), rest, e)
-    | evalExp exp e == BoolTrue = 
-    | otherwise = where
-        cons1_list = formatConstruct c
+--evalConstruct ((While exp c), rest, e)
+--    | evalExp exp e == BoolTrue = error
+--    | otherwise = where
+--        cons1_list = formatConstruct c
 
 -- IntDeclare Evaluation [Choose between default 0 value or null]
 evalConstruct ((IntDeclare var), rest, e) = evalConstruct ((head rest), (tail rest), (SplInt, var, Int 0):e)
@@ -39,29 +40,36 @@ evalConstruct ((IntDeclare var), rest, e) = evalConstruct ((head rest), (tail re
 -- BoolDeclare Evaluation [Choose between default BoolFalse or null]
 evalConstruct ((BoolDeclare var), rest, e) = evalConstruct ((head rest), (tail rest), (SplBool, var, BoolFalse):e)
 
+
 -- VarAssign Evaluation [Might not work] [Split evalconstructs]
 evalConstruct ((VarAssign var exp), rest, e)
-    | lookUpType var e == SplBool && (exp == BoolTrue || exp == BoolFalse) = evalConstruct ((head rest), (tail rest), update var exp e) 
-    | lookUpType var e == SplInt && exp == Int num = evalConstruct ((head rest), (tail rest), update var exp e)
-    | lookUpType var e == SplDoubleList && exp == Sequences = evalConstruct ((head rest), (tail rest), update var exp e)
-    | otherwise = error "Wrong data type"
+    | lookUpType var e == SplBool && (evaluatedExp == BoolTrue || evaluatedExp == BoolFalse) = evalConstruct ((head rest), (tail rest), updatedEnv) 
+    | lookUpType var e == SplInt && evaluatedExp == Int num = evalConstruct ((head rest), (tail rest), updatedEnv)
+    | lookUpType var e == SplDoubleList && evaluatedExp == Sequences = evalConstruct ((head rest), (tail rest), updatedEnv)
+    | otherwise = error "Wrong data type" where 
+    	updatedEnv = update var evaluatedExp e
+        evaluatedExp = evalExp exp e
+
+
+-- PushAssign Evaluation
+evalConstruct ((StackOperationAssign listVar1 (Push listVar2 exp)), rest, e) = evalConstruct ((head rest), (tail rest), updatedEnv1) where
+    updatedEnv1 = updateListPush listVar1 listVar2 evaluatedExp e
+    evaluatedExp = evalExp e 
+
+-- PopAssign Evaluation
+evalConstruct ((StackOperationAssign intVar (Pop listVar)), rest, e) = evalConstruct ((head rest), (tail rest), updatedEnv2) where
+    updatedEnv2 = updateListPop intVar listVar e 
 
 -- NewSingleList Evaluation 
 evalConstruct ((NewSingleList var), rest, e) = evalConstruct ((head rest), (tail rest), (SplSingleList, var, List "[]"):e)
-
--- SingleListAssign Push Evaluation
-evalConstruct ((SingleListAssign var1 (Push var2 exp)), rest, e) = evalConstruct ((head rest), (tail rest), updateList var1 var2 exp e)
-
--- SingleListAssign Pop Evaluation
-evalConstruct ((SingleListAssign var1 (Pop var2)), rest, e) = evalConstruct
 
 -- DoubleListDeclare Evaluation
 evalConstruct ((DoubleListDeclare var exp), rest, e) = evalConstruct ((head rest), (tail rest), (SplDoubleList, var, exp):e)
 
 -- Return Evaluation
 evalConstruct ((Return var), rest, e)
-    | rest == [] && lookUpType var == SplSingleList = ((Return var), rest, e)
-    | otherwise = error "Stupid"
+    | rest == [] && lookUpType var == SplDoubleList = ((Return var), rest, e)
+    | otherwise = error "Return type is not of the correct type. It should be of SplDoubleList"
 
 
 evalExp :: Exp -> Environment -> Exp
@@ -83,7 +91,7 @@ evalExp (Sequences) e = Sequences
 evalExp (Length name) e = Int (length (convertToHaskellList (lookUp name e)))
 
 -- List empty function reduction
-evalExp (Empty name) e =
+evalExp (Empty name) e 
     | length (convertToHaskellList (lookUp name e)) == 0 = BoolTrue
     | otherwise = BoolFalse
 
@@ -104,31 +112,31 @@ evalExp (Divide (Int a) (Int b)) e = Int (a / b)
 evalExp (Divide e1 e2) e = evalExp (Divide (evalExp e1 e) (evalExp e2 e)) e
 
 -- LessThan expression reduction
-evalExp (LessThan (Int a) (Int b)) e = 
+evalExp (LessThan (Int a) (Int b)) e 
     | a < b == True = BoolTrue
     | otherwise = BoolFalse
 evalExp (LessThan e1 e2) e = evalExp (LessThan (evalExp e1 e) (evalExp e2 e)) e
 
 -- GreaterThan expression reduction
-evalExp (GreaterThan (Int a) (Int b)) e = 
+evalExp (GreaterThan (Int a) (Int b)) e
     | a > b == True = BoolTrue
     | otherwise = BoolFalse
 evalExp (GreaterThan e1 e2) e = evalExp (GreaterThan (evalExp e1 e) (evalExp e2 e)) e
 
 -- GreaterThanOrEqualTo expression reduction
-evalExp (GTE (Int a) (Int b)) e = 
+evalExp (GTE (Int a) (Int b)) e
     | a >= b == True = BoolTrue
     | otherwise = BoolFalse
 evalExp (GTE e1 e2) e = evalExp (GTE (evalExp e1 e) (evalExp e2 e)) e
 
 -- LessThanOrEqualTo expression reduction
-evalExp (LTE (Int a) (Int b)) e = 
+evalExp (LTE (Int a) (Int b)) e
     | a <= b == True = BoolTrue
     | otherwise = BoolFalse
 evalExp (LTE e1 e2) e = evalExp (LTE (evalExp e1 e) (evalExp e2 e)) e
 
 -- Not expression evaluation
-evalExp (Not val) e =
+evalExp (Not val) e
     | val == BoolTrue = BoolFalse
     | val == BoolFalse = BoolTrue
     | otherwise = error "Not a valid boolean expression"
@@ -144,11 +152,25 @@ lookUpType name env = get1st (getVarTuple name env)
 
 -- Update variable value within current environment
 update :: String -> Exp -> Environment -> Environment
-update var exp oldEnv = (lookUpType var oldEnv, var, exp):(delete var oldEnv))
+update var exp oldEnv = (lookUpType var oldEnv, var, exp):(delete var oldEnv)
 
--- Update list function
-updateList :: String -> Exp -> Environment -> Environment
-updateList var 
+-- Update Environment for Lists when push is called
+updateListPush :: String -> String -> Exp -> Environment -> Environment
+updateListPush listVar1 listVar2 (Int val) oldEnv =
+    | (lookUp listVar1 oldEnv) == (lookUp listVar2 oldEnv) = update listVar1 newListExp oldEnv
+    | otherwise = union (update listVar1 newListExp oldEnv) (update listVar2 newListExp oldEnv) where
+        newListExp = List (show pushedList)
+        pushedList = val:(convertToHaskellList $ lookUp (listVar2 oldEnv))
+updateListPush _ _ _ _ = error "Attempting to push non-integer value into list"
+
+-- Update Environment for Lists when pop is called
+updateListPop :: String -> String -> Environment -> Environment
+updateListPop intVar listVar oldEnv = union (update intVar intExp oldEnv) (update listVar newListExp oldEnv) where
+    intExp = x
+    newListExp = List (show poppedList)
+    poppedList = case (convertToHaskellList $ lookUp (listVar oldEnv)) of 
+        [] = error "Cannot pop from an empty list"
+        (x:xs) = xs
 
 -- Delete variable from given environment
 delete :: String -> Environment -> Environment
@@ -193,3 +215,4 @@ get1st (a,_,_) = a
 get2nd (_,b,_) = b
 
 get3rd (_,_,c) = c
+

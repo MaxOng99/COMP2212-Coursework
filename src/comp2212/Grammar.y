@@ -56,7 +56,7 @@ Construct : Construct newline Construct                                         
           | Int var                                                             { IntDeclare $2 }
           | Bool var                                                            { BoolDeclare $2 }
           | var '=' Exp                                                         { VarAssign $1 $3 }
-          | var '=' StackOperations                                             { SingleListAssign $1 $3 }
+          | var '=' StackOperations                                             { StackOperationAssign $1 $3 }
           | 'Int[]' var '=' '[]'                                                { NewSingleList $2 }
           | 'Int[][]' var '=' Exp                                               { DoubleListDeclare $2 $4 }
           | return var                                                          { Return $2 }
@@ -95,7 +95,7 @@ data Construct = IfThenElse Exp Construct Construct
                | BoolDeclare String
                | VarAssign String Exp
                | NewSingleList String
-               | SingleListAssign String StackOperations
+               | StackOperationAssign String StackOperations
                | DoubleListDeclare String Exp
                | Return String
                | Newline Construct Construct
