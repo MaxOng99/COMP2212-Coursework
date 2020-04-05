@@ -28,11 +28,13 @@ evalConstruct ((IfThenElse exp c1 c2), rest, e) -- change variable names lol
         new_cons1 = cons1_list ++ rest
         new_cons2 = cons2_list ++ rest
 
--- While Evaluation
---evalConstruct ((While exp c), rest, e)
---    | evalExp exp e == BoolTrue = error
---    | otherwise = where
---        cons1_list = formatConstruct c
+-- While Evaluation 
+evalConstruct ((While exp c), rest, e)
+    | evalExp exp e == BoolTrue = evalConstruct (head new_cons, tail new_cons, e)
+    | evalExp exp e == BoolFalse = evalConstruct (head rest, tail rest, e) 
+    | otherwise = error "While condition not a boolean" where
+    	new_cons = cons_list ++ [While exp c] ++ rest
+    	cons_list = formatConstruct c
 
 -- IntDeclare Evaluation [Choose between default 0 value or null]
 evalConstruct ((IntDeclare var), rest, e) = evalConstruct ((head rest), (tail rest), (SplInt, var, Int 0):e)
