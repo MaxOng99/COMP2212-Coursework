@@ -58,8 +58,8 @@ evalConstruct ((VarAssign var (BoolFalse)), rest, e)
     | otherwise = error "Cannot assign this variable to a boolean"
 
 -- DoubleListAssign Evaluation
-evalConstruct ((VarAssign var Sequences), rest, e)
-    | lookUpType var e == SplDoubleList = evalConstruct ((head rest), (tail rest), update var Sequences e)
+evalConstruct ((VarAssign var (Sequences list)), rest, e)
+    | lookUpType var e == SplDoubleList = evalConstruct ((head rest), (tail rest), update var (Sequences list) e)
     | otherwise = error "Cannot assign this variable to a Double List"
 
 -- GeneralVarAssign Evaluation
@@ -67,13 +67,14 @@ evalConstruct ((VarAssign var exp), rest, e) = evalConstruct ((head rest), (tail
     evaluatedExp = evalExp exp e
 
 -- PushAssign Evaluation
-evalConstruct ((StackOperationAssign listVar1 (Push listVar2 exp)), rest, e) = evalConstruct ((head rest), (tail rest), updatedEnv1) where
-    updatedEnv1 = updateListPush listVar1 listVar2 evaluatedExp e
-    evaluatedExp = evalExp exp e 
+evalConstruct ((StackOperationAssign var1 (Push var2 exp)), rest, e) = case evalExp exp e of
+    evaluated1@(Int val) -> evalConstruct ((head rest), (tail rest), updateListPush var1 var2 evaluated1 e)
+    evaluated2@(List stringList) -> evalConstruct ((head rest), (tail rest), updateSequencePush var1 var2 evaluated2 e)
 
 -- PopAssign Evaluation
-evalConstruct ((StackOperationAssign intVar (Pop listVar)), rest, e) = evalConstruct ((head rest), (tail rest), updatedEnv2) where
-    updatedEnv2 = updateListPop intVar listVar e 
+evalConstruct ((StackOperationAssign var1 (Pop var2)), rest, e) = case lookUp var2 e of
+    (List _) -> evalConstruct ((head rest), (tail rest), updateListPop var1 var2 e)
+    (Sequences _) -> evalConstruct ((head rest), (tail rest), updateSequencePop var1 var2 e)
 
 -- NewSingleList Evaluation 
 evalConstruct ((NewSingleList var), rest, e) = evalConstruct ((head rest), (tail rest), (SplSingleList, var, List "[]"):e)
@@ -101,14 +102,14 @@ evalExp (Var name) e = lookUp name e
 
 evalExp (List list) e = List list
 
-evalExp (Sequences) e = lookUp "sequence" e
+evalExp (Sequences list) e = Sequences list
 
 -- List length function reduction
-evalExp (Length name) e = Int (length (convertToHaskellList (lookUp name e)))
+evalExp (Length name) e = Int (length (convertToHaskellList $ lookUp name e))
 
 -- List empty function reduction
 evalExp (Empty name) e 
-    | length (convertToHaskellList (lookUp name e)) == 0 = BoolTrue
+    | length (convertToHaskellList $ lookUp name e) == 0 = BoolTrue
     | otherwise = BoolFalse
 
 -- Addition expression reduction
@@ -177,14 +178,30 @@ updateListPush listVar1 listVar2 (Int val) oldEnv
         pushedList = val:(convertToHaskellList $ lookUp listVar2 oldEnv) 
 updateListPush _ _ _ _ = error "Attempting to push non-integer value into list"
 
+updateSequencePush :: String -> String -> Exp -> Environment -> Environment
+updateSequencePush seqVar1 seqVar2 (List stringList) oldEnv
+    | (lookUp seqVar1 oldEnv) == (lookUp seqVar2 oldEnv) = update seqVar1 newSeqExp oldEnv
+    | otherwise = union (update seqVar1 newSeqExp oldEnv) (update seqVar1 newSeqExp oldEnv) where
+        newSeqExp = Sequences (show pushedSeq) 
+        pushedSeq = convertToHaskellList (List stringList):(convertToHaskellList' $ lookUp seqVar2 oldEnv) 
+updateSequencePush _ _ _ _ = error "Attempting to push non single list values"
+
 -- Update Environment for Lists when pop is called
 updateListPop :: String -> String -> Environment -> Environment
-updateListPop intVar listVar oldEnv = union (update intVar intExp oldEnv) (update listVar newListExp oldEnv) where
-    intExp = Int (head poppedList)
-    newListExp = List (show poppedList)
-    poppedList = case (convertToHaskellList $ lookUp listVar oldEnv) of 
+updateListPop intVar listVar oldEnv = union (update intVar intExp oldEnv) (update listVar poppedList oldEnv) where
+    intExp = Int (head list)
+    poppedList = List (show $ tail list)
+    list = case (convertToHaskellList $ lookUp listVar oldEnv) of 
         [] -> error "Cannot pop from an empty list"
-        (x:xs) -> xs
+        (x:xs) -> (xs)
+
+updateSequencePop :: String -> String -> Environment -> Environment
+updateSequencePop listVar seqVar oldEnv = union (update listVar listExp oldEnv) (update seqVar newSeqVar oldEnv) where
+    listExp = List (show $ head poppedSeq)
+    newSeqVar = Sequences (show $ tail poppedSeq)
+    poppedSeq = case (convertToHaskellList' $ lookUp seqVar oldEnv) of
+        [] -> error "Cannot pop from an empty sequence"
+        (xs:xss) -> (xs:xss)
 
 -- Delete variable from given environment
 delete' :: String -> Environment -> Environment
@@ -195,25 +212,23 @@ delete' var (x:xs)
 
 -- Variable tuple get function
 getVarTuple :: String -> Environment -> (Types, String, Exp)
+getVarTuple _ [] = error "No variable found"
 getVarTuple name (x:xs)
     | name == (get2nd x) = x
     | name /= (get2nd x) = getVarTuple name xs
     | otherwise = error "No variable found"
 
--- Convert String List to Haskell List Type
+-- Convert single string list into a single haskell list
 convertToHaskellList :: Exp -> [Int]
-convertToHaskellList (List stringList)
+convertToHaskellList (List stringList) = (read stringList) :: [Int]
+convertToHaskellList _ = error "Not a list"
+
+-- Convert Sequences into a haskell list of lists
+convertToHaskellList' :: Exp -> [[Int]]
+convertToHaskellList' (Sequences stringList)
     | length haskellList == 0 = []
-    | otherwise = haskellList where 
-    haskellList = convert [x | x <- stringList, x /= '[', x/=']', x/= ',']
-
--- Converts strings to integers
-convert :: String -> [Int]
-convert xs = [(read :: String -> Int) (charToString x) | x <- xs]
-
--- Converts character to list type
-charToString :: Char -> String
-charToString c = [c]
+    | otherwise = haskellList where
+        haskellList = read stringList :: [[Int]]
 
 -- Function which splits AST into a list of Constructs
 formatConstruct :: Construct -> [Construct]
@@ -222,7 +237,7 @@ formatConstruct x = [x]
 
 -- Parses source program and input number sequence and converts it into a state
 convertToState :: Construct -> [[Int]] -> State
-convertToState cons inpList = (head (formatConstruct cons), tail (formatConstruct cons), [(SplDoubleList, "sequence", Sequences (show inpList)])
+convertToState cons inpList = (head (formatConstruct cons), tail (formatConstruct cons), [])
 
 get1st (a,_,_) = a
 

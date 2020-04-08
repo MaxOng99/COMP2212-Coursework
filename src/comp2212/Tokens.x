@@ -45,7 +45,7 @@ tokens :-
   \[\]        { \p -> \s -> TokenEmptyList p }
   Int\[\]\[\] { \p -> \s -> TokenLists p }
   $alpha [$alpha $digit \_ \’]*   { \p -> \s -> TokenVar s p} 
-  sequences { \p -> \s -> TokenSequences p }
+  sequences { \p -> \s -> TokenSequences s p }
   
 { 
 -- Each action has type :: AlexPosn -> String -> Token 
@@ -82,7 +82,7 @@ data Token =
   TokenEmptyList AlexPosn      |
   TokenList AlexPosn           |
   TokenLists AlexPosn          |
-  TokenSequences AlexPosn      |
+  TokenSequences String AlexPosn      |
   TokenVar String AlexPosn     |
   TokenNot AlexPosn
   deriving (Eq,Show)
@@ -102,6 +102,7 @@ tokenPosn (TokenTrue  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenFalse  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenInt _ (AlexPn a l c) ) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenSequence _ (AlexPn a l c) ) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenSequences _ (AlexPn a l c) ) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenEq  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLT  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenGT (AlexPn a l c)) = show(l) ++ ":" ++ show(c)

@@ -40,7 +40,7 @@ import Tokens
     'Int[][]' { TokenLists _ }
     var    { TokenVar $$ _ }
     newline { TokenNewLine _ }
-    sequences { TokenSequences _ } 
+    sequences { TokenSequences $$ _ } 
 
 %left newline
 %nonassoc '<' '<=' '>=' '>'
@@ -80,7 +80,7 @@ Exp : Exp '<' Exp       { LessThan $1 $3 }
     | false             { BoolFalse }
     | var               { Var $1 }
     | list              { List $1 }
-    | sequences         { Sequences }
+    | sequences         { Sequences $1 }
     | '('Exp')'         { $2 }
 
 {
@@ -110,7 +110,7 @@ data Exp = Int Int
          | BoolFalse
          | Var String
          | List String
-         | Sequences
+         | Sequences String
          | Length String
          | Empty String
          | Add Exp Exp
