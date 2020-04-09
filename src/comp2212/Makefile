@@ -7,7 +7,7 @@
 #   
 
 # Files that need to be generated from other files
-DEPEND += Tokens.hs Grammar.hs SplEvaluator.hs
+DEPEND += Tokens.hs Grammar.hs TypeChecker.hs SplEvaluator.hs
 
 # When "make" is invoked with no arguments, we build an executable 
 #  after building everything that it depends on

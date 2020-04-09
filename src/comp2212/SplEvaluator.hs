@@ -5,16 +5,13 @@ import Tokens
 import Grammar
 import Data.List
 
-data Types = SplInt | SplBool | SplSingleList | SplDoubleList
-    deriving (Show, Eq)
-
-type Environment = [(Types, String, Exp)]
+type Environment = [(String, Exp)]
 type State = (Construct, [Construct], Environment)
 
 evalLoop :: State -> String
 evalLoop state = show value where
     ((Return var), rest, env) = evalConstruct state
-    (t, name, value) = getVarTuple var env
+    (name, value) = getVarTuple var env
 
 -- Single-step evaluation for expressions
 evalConstruct :: State -> State
@@ -37,30 +34,20 @@ evalConstruct ((While exp c), rest, e)
         cons_list = formatConstruct c
 
 -- IntDeclare Evaluation [Choose between default 0 value or null]
-evalConstruct ((IntDeclare var), rest, e) = evalConstruct ((head rest), (tail rest), (SplInt, var, Int 0):e)
+evalConstruct ((IntDeclare var), rest, e) = evalConstruct ((head rest), (tail rest),  (var, Int 0):e)
 
 -- BoolDeclare Evaluation [Choose between default BoolFalse or null]
-evalConstruct ((BoolDeclare var), rest, e) = evalConstruct ((head rest), (tail rest), (SplBool, var, BoolFalse):e)
-
+evalConstruct ((BoolDeclare var), rest, e) = evalConstruct ((head rest), (tail rest), (var, BoolFalse):e)
 
 -- IntAssign Evaluation
-evalConstruct ((VarAssign var (Int val)), rest, e)
-    | lookUpType var e == SplInt = evalConstruct ((head rest), (tail rest), update var (Int val) e)
-    | otherwise = error "Cannot assign this variable to an int"
+evalConstruct ((VarAssign var (Int val)), rest, e) = evalConstruct ((head rest), (tail rest), update var (Int val) e)
 
 -- BoolAssign Evaluation
-evalConstruct ((VarAssign var (BoolTrue)), rest, e)
-    | lookUpType var e == SplBool = evalConstruct ((head rest), (tail rest), update var (BoolTrue) e)
-    | otherwise = error "Cannot assign this variable to a boolean"
-
-evalConstruct ((VarAssign var (BoolFalse)), rest, e)
-    | lookUpType var e == SplBool = evalConstruct ((head rest), (tail rest), update var (BoolFalse) e)
-    | otherwise = error "Cannot assign this variable to a boolean"
+evalConstruct ((VarAssign var (BoolTrue)), rest, e) = evalConstruct ((head rest), (tail rest), update var (BoolTrue) e)
+evalConstruct ((VarAssign var (BoolFalse)), rest, e) = evalConstruct ((head rest), (tail rest), update var (BoolFalse) e)
 
 -- DoubleListAssign Evaluation
-evalConstruct ((VarAssign var (Sequences list)), rest, e)
-    | lookUpType var e == SplDoubleList = evalConstruct ((head rest), (tail rest), update var (Sequences list) e)
-    | otherwise = error "Cannot assign this variable to a Double List"
+evalConstruct ((VarAssign var (Sequences list)), rest, e) = evalConstruct ((head rest), (tail rest), update var (Sequences list) e)
 
 -- GeneralVarAssign Evaluation
 evalConstruct ((VarAssign var exp), rest, e) = evalConstruct ((head rest), (tail rest), update var evaluatedExp e) where
@@ -77,16 +64,16 @@ evalConstruct ((StackOperationAssign var1 (Pop var2)), rest, e) = case lookUp va
     (Sequences _) -> evalConstruct ((head rest), (tail rest), updateSequencePop var1 var2 e)
 
 -- NewSingleList Evaluation 
-evalConstruct ((NewSingleList var), rest, e) = evalConstruct ((head rest), (tail rest), (SplSingleList, var, List "[]"):e)
+evalConstruct ((NewSingleList var), rest, e) = evalConstruct ((head rest), (tail rest), (var, List "[]"):e)
 
 -- DoubleListDeclare Evaluation
-evalConstruct ((DoubleListDeclare var exp), rest, e) = evalConstruct ((head rest), (tail rest), (SplDoubleList, var, evaluatedExp):e) where
+evalConstruct ((DoubleListDeclare var exp), rest, e) = evalConstruct ((head rest), (tail rest), (var, evaluatedExp):e) where
     evaluatedExp = evalExp exp e
 
 -- Return Evaluation
 evalConstruct ((Return var), rest, e)
-    | rest == [] && lookUpType var e == SplSingleList = ((Return var), rest, e)
-    | otherwise = error "Return type is not of the correct type. It should be of SplSingleList"
+    | rest == [] = ((Return var), rest, e)
+    | otherwise = error "Return must be called at the end of the program"
 
 
 evalExp :: Exp -> Environment -> Exp
@@ -106,6 +93,7 @@ evalExp (Sequences list) e = Sequences list
 
 -- List length function reduction
 evalExp (Length name) e = Int (length (convertToHaskellList $ lookUp name e))
+
 
 -- List empty function reduction
 evalExp (Empty name) e 
@@ -159,32 +147,29 @@ evalExp (Not exp) e = evalExp (Not (evalExp exp e)) e
 
 -- Lookup variable value function
 lookUp :: String -> Environment -> Exp
-lookUp name env = get3rd (getVarTuple name env)
+lookUp name env = get2nd (getVarTuple name env)
 
--- Lookup variable type function
-lookUpType :: String -> Environment -> Types
-lookUpType name env = get1st (getVarTuple name env)
 
 -- Update variable value within current environment
 update :: String -> Exp -> Environment -> Environment
-update var exp oldEnv = (lookUpType var oldEnv, var, exp):(delete' var oldEnv)
+update var exp oldEnv = (var, exp):(delete' var oldEnv)
 
 -- Update Environment for Lists when push is called
 updateListPush :: String -> String -> Exp -> Environment -> Environment
-updateListPush listVar1 listVar2 (Int val) oldEnv
+updateListPush listVar1 listVar2 exp oldEnv
     | (lookUp listVar1 oldEnv) == (lookUp listVar2 oldEnv) = update listVar1 newListExp oldEnv
     | otherwise = union (update listVar1 newListExp oldEnv) (update listVar2 newListExp oldEnv) where
         newListExp = List (show pushedList)
         pushedList = val:(convertToHaskellList $ lookUp listVar2 oldEnv) 
-updateListPush _ _ _ _ = error "Attempting to push non-integer value into list"
+        (Int val) = evalExp exp oldEnv
 
 updateSequencePush :: String -> String -> Exp -> Environment -> Environment
-updateSequencePush seqVar1 seqVar2 (List stringList) oldEnv
+updateSequencePush seqVar1 seqVar2 exp oldEnv
     | (lookUp seqVar1 oldEnv) == (lookUp seqVar2 oldEnv) = update seqVar1 newSeqExp oldEnv
     | otherwise = union (update seqVar1 newSeqExp oldEnv) (update seqVar1 newSeqExp oldEnv) where
         newSeqExp = Sequences (show pushedSeq) 
         pushedSeq = convertToHaskellList (List stringList):(convertToHaskellList' $ lookUp seqVar2 oldEnv) 
-updateSequencePush _ _ _ _ = error "Attempting to push non single list values"
+        List stringList = evalExp exp oldEnv
 
 -- Update Environment for Lists when pop is called
 updateListPop :: String -> String -> Environment -> Environment
@@ -193,7 +178,7 @@ updateListPop intVar listVar oldEnv = union (update intVar intExp oldEnv) (updat
     poppedList = List (show $ tail list)
     list = case (convertToHaskellList $ lookUp listVar oldEnv) of 
         [] -> error "Cannot pop from an empty list"
-        (x:xs) -> (xs)
+        (x:xs) -> (x:xs)
 
 updateSequencePop :: String -> String -> Environment -> Environment
 updateSequencePop listVar seqVar oldEnv = union (update listVar listExp oldEnv) (update seqVar newSeqVar oldEnv) where
@@ -207,16 +192,16 @@ updateSequencePop listVar seqVar oldEnv = union (update listVar listExp oldEnv) 
 delete' :: String -> Environment -> Environment
 delete' _ [] = []
 delete' var (x:xs)
-   | var == get2nd x = [] ++ (delete' var xs)
-   | var /= get2nd x = [x] ++ (delete' var xs) 
+   | var == get1st x = [] ++ (delete' var xs)
+   | var /= get1st x = [x] ++ (delete' var xs) 
 
 -- Variable tuple get function
-getVarTuple :: String -> Environment -> (Types, String, Exp)
+getVarTuple :: String -> Environment -> (String, Exp)
 getVarTuple _ [] = error "No variable found"
 getVarTuple name (x:xs)
-    | name == (get2nd x) = x
-    | name /= (get2nd x) = getVarTuple name xs
-    | otherwise = error "No variable found"
+    | name == (get1st x) = x
+    | name /= (get1st x) = getVarTuple name xs
+    | otherwise = error (name ++ " No variable found")
 
 -- Convert single string list into a single haskell list
 convertToHaskellList :: Exp -> [Int]
@@ -239,9 +224,7 @@ formatConstruct x = [x]
 convertToState :: Construct -> [[Int]] -> State
 convertToState cons inpList = (head (formatConstruct cons), tail (formatConstruct cons), [])
 
-get1st (a,_,_) = a
+get1st (a,_) = a
 
-get2nd (_,b,_) = b
-
-get3rd (_,_,c) = c
+get2nd (_,b) = b
 

@@ -123,4 +123,8 @@ data Exp = Int Int
          | LTE Exp Exp
          | Not Exp
          deriving (Show, Eq)
+
+data Types = SplInt | SplBool | SplSingleList | SplDoubleList
+    deriving (Show, Eq)
+
 }
