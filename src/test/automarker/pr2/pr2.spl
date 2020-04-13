@@ -1,0 +1,22 @@
+Int[][] in = sequences
+Int[] first = []
+Int[] second = []
+Int[] third = []
+Int[] shuffle = []
+first = in.pop
+second = in.pop
+third = in.pop
+while (first.length > 0) {
+	Int a
+	Int b
+	Int c
+	a = first.pop
+	b = second.pop
+	c = third.pop
+	shuffle = shuffle.push(c)
+	shuffle = shuffle.push(b)
+	shuffle = shuffle.push(a)
+	shuffle = shuffle.push(a + b)
+	shuffle = shuffle.push(b + c)
+}
+return shuffle

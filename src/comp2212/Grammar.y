@@ -40,7 +40,8 @@ import Tokens
     'Int[][]' { TokenLists _ }
     var    { TokenVar $$ _ }
     newline { TokenNewLine _ }
-    sequences { TokenSequences $$ _ } 
+    sequences { TokenSequences _ }
+    print    { TokenPrint _ }
 
 %left newline
 %nonassoc '<' '<=' '>=' '>'
@@ -59,6 +60,7 @@ Construct : Construct newline Construct                                         
           | var '=' StackOperations                                             { StackOperationAssign $1 $3 }
           | 'Int[]' var '=' '[]'                                                { NewSingleList $2 }
           | 'Int[][]' var '=' Exp                                               { DoubleListDeclare $2 $4 }
+          | print '(' Exp ')'                                                   { Print $3 }
           | return var                                                          { Return $2 }
 
 StackOperations : var push '('Exp')'                                            { Push $1 $4 }
@@ -80,7 +82,7 @@ Exp : Exp '<' Exp       { LessThan $1 $3 }
     | false             { BoolFalse }
     | var               { Var $1 }
     | list              { List $1 }
-    | sequences         { Sequences $1 }
+    | sequences         { Input }
     | '('Exp')'         { $2 }
 
 {
@@ -99,6 +101,7 @@ data Construct = IfThenElse Exp Construct Construct
                | DoubleListDeclare String Exp
                | Return String
                | Newline Construct Construct
+               | Print Exp
                deriving (Show, Eq)
 
 data StackOperations = Push String Exp
@@ -110,6 +113,7 @@ data Exp = Int Int
          | BoolFalse
          | Var String
          | List String
+         | Input
          | Sequences String
          | Length String
          | Empty String

@@ -14,7 +14,7 @@ initiateTypeChecking c = isCorrect $ typeOfConstruct (c1, rest, tenv) where
 
 -- Type checker for constructs -- 
 typeOfConstruct :: TypeCheckerState -> TypeCheckerState
-
+typeOfConstruct (c, [], tenv) = (c, [], tenv) 
 typeOfConstruct (IfThenElse exp c1 c2, rest, tenv)
     | typeOfExp exp tenv == SplBool = typeOfConstruct (fromJust $ safeHead new_rest, safeTail new_rest, tenv) 
     | otherwise = error "if-then-else construct expects a boolean expression. Provided expression is not a boolean" where
@@ -38,7 +38,7 @@ typeOfConstruct (VarAssign var exp, rest, tenv)
 typeOfConstruct (StackOperationAssign var1 (Push var2 exp), rest, tenv)
     | var1Type == SplSingleList = if var2Type == SplSingleList && expType == SplInt then newState else error (var1 ++ " expects an integer")
     | var1Type == SplDoubleList = if var2Type == SplDoubleList && expType == SplSingleList then newState else error (var1 ++ " expects a single list") where
-        newState = (fromJust $ safeHead rest, safeTail rest, tenv)
+        newState = typeOfConstruct (fromJust $ safeHead rest, safeTail rest, tenv)
         expType = typeOfExp exp tenv
         var1Type = lookUpType var1 tenv
         var2Type = lookUpType var2 tenv
@@ -46,15 +46,14 @@ typeOfConstruct (StackOperationAssign var1 (Push var2 exp), rest, tenv)
 typeOfConstruct (StackOperationAssign var1 (Pop var2), rest, tenv)
     | lookUpType var1 tenv == SplInt = if lookUpType var2 tenv == SplSingleList then newState else error (var1 ++ " expects an integer.")
     | lookUpType var1 tenv == SplSingleList = if lookUpType var2 tenv == SplDoubleList then newState else error (var1 ++ " expects a single list")
-        where newState = (fromJust $ safeHead rest, safeTail rest, tenv)
+        where newState = typeOfConstruct (fromJust $ safeHead rest, safeTail rest, tenv)
 
 typeOfConstruct (NewSingleList var, rest, tenv) = typeOfConstruct (fromJust $ safeHead rest, safeTail rest, addBinding var SplSingleList tenv)
 
 typeOfConstruct (DoubleListDeclare var exp, rest, tenv) = typeOfConstruct (fromJust $ safeHead rest, safeTail rest, addBinding var SplDoubleList tenv)
 
-typeOfConstruct (Return var, rest, tenv) = typeOfConstruct (fromJust $ safeHead rest, safeTail rest, tenv)
-
-typeOfConstruct (c, [], tenv) = (c, [], tenv) 
+typeOfConstruct (Print exp, rest, tenv) = typeOfConstruct (fromJust $ safeHead rest, safeTail rest, tenv)
+typeOfConstruct (Return var, rest, tenv) = (Return var, [], tenv)
 
 -- Type checker for expressions -- 
 typeOfExp :: Exp -> TypeEnvironment -> Types
@@ -93,7 +92,7 @@ typeOfExp (Not e) tenv
 -- Helper Functions -- 
 isCorrect :: TypeCheckerState -> Bool
 isCorrect (c1, [], tenv) = True
-isCorrect _ = False
+isCorrect (c1, (x:xs), tenv) = False
 
 safeTail :: [a] -> [a]
 safeTail [] = []
@@ -106,15 +105,15 @@ safeHead (x:xs) = Just x
 checkArithmetic :: String -> Exp -> Exp -> TypeEnvironment -> Types
 checkArithmetic operator e1 e2 tenv
     | typeOfExp e1 tenv == SplInt && typeOfExp e2 tenv == SplInt = SplInt
-    | typeOfExp e1 tenv /= SplInt = error (operator ++ " expects two integerS. First argument is not an interger")
-    | typeOfExp e2 tenv /= SplInt = error (operator ++ " expects two integerS. Second argument is not an integer")
-    | otherwise = error (operator ++ " expects two integerS. Both arguments are not integers")
+    | typeOfExp e1 tenv /= SplInt = error (operator ++ " expects two integers. First argument is not an interger")
+    | typeOfExp e2 tenv /= SplInt = error (operator ++ " expects two integers. Second argument is not an integer")
+    | otherwise = error (operator ++ " expects two integers. Both arguments are not integers")
 
 checkComparator :: String -> Exp -> Exp -> TypeEnvironment -> Types
 checkComparator operator e1 e2 tenv
-    | typeOfExp e1 tenv == SplBool && typeOfExp e2 tenv == SplBool = SplBool
-    | typeOfExp e1 tenv /= SplBool = error (operator ++ " expects two boolean. First argument is not a boolean")
-    | typeOfExp e2 tenv /= SplBool = error (operator ++ " expects two boolean. Second argument is not a boolean")
+    | typeOfExp e1 tenv == SplInt && typeOfExp e2 tenv == SplInt = SplBool
+    | typeOfExp e1 tenv /= SplInt = error (operator ++ " expects two boolean. First argument is not a boolean")
+    | typeOfExp e2 tenv /= SplInt = error (operator ++ " expects two boolean. Second argument is not a boolean")
     | otherwise = error (operator ++ " expects two boolean. Bothh arguemtns are not boolean")
 
 lookUpType :: String -> TypeEnvironment -> Types

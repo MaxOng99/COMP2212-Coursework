@@ -1,0 +1,29 @@
+Int[][] in = sequences
+Int[] firstList = []
+Int[] secondList = []
+Int[] shuffleList = []
+firstList = in.pop
+secondList = in.pop
+Int notGonnaUseThisShit
+Int a
+Int b
+Int c 
+Int d
+if (secondList.length >= 2) {
+	shuffleList = shuffleList.push(0)
+	notGonnaUseThisShit = secondList.pop
+	a = secondList.pop
+	b = firstList.pop
+	shuffleList = shuffleList.push(a)
+	shuffleList = shuffleList.push(b)
+	while (secondList.length >= 2) {
+		notGonnaUseThisShit = secondList.pop
+		c = secondList.pop
+		d = firstList.pop
+		shuffleList = shuffleList.push(c)
+		shuffleList = shuffleList.push(d)
+	}
+}else {
+	print(a)
+}
+return shuffleList

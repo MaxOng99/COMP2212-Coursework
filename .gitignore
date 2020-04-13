@@ -6,3 +6,4 @@ src/comp2212/*.hi
 src/comp2212/Tokens.hs
 src/comp2212/Grammar.hs
 src/comp2212/*.exe
+Main

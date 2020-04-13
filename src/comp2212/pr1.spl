@@ -2,10 +2,12 @@ Int[][] in = sequences
 Int[] first = []
 Int[] second = []
 Int[] shuffle = []
+first = in.pop
+second = in.pop
+Int x
+Int y
+Int z
 while (not first.empty) {
-	Int x
-	Int y
-	Int z
 	x = first.pop
 	y = first.pop
 	z = second.pop

@@ -44,9 +44,10 @@ tokens :-
   Int\[\]     { \p -> \s -> TokenList p }
   \[\]        { \p -> \s -> TokenEmptyList p }
   Int\[\]\[\] { \p -> \s -> TokenLists p }
-  $alpha [$alpha $digit \_ \’]*   { \p -> \s -> TokenVar s p} 
-  sequences { \p -> \s -> TokenSequences s p }
-  
+  sequences { \p -> \s -> TokenSequences p }
+  print     { \p -> \s -> TokenPrint p }
+  $alpha [$alpha $digit \_ \’]*   { \p -> \s -> TokenVar s p}
+
 { 
 -- Each action has type :: AlexPosn -> String -> Token 
 -- The token type: 
@@ -82,12 +83,14 @@ data Token =
   TokenEmptyList AlexPosn      |
   TokenList AlexPosn           |
   TokenLists AlexPosn          |
-  TokenSequences String AlexPosn      |
+  TokenSequences AlexPosn      |
+  TokenPrint AlexPosn          |
   TokenVar String AlexPosn     |
   TokenNot AlexPosn
   deriving (Eq,Show)
 
 tokenPosn :: Token -> String
+tokenPosn (TokenPrint (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLength (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenPush (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenPop (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
@@ -102,7 +105,7 @@ tokenPosn (TokenTrue  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenFalse  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenInt _ (AlexPn a l c) ) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenSequence _ (AlexPn a l c) ) = show(l) ++ ":" ++ show(c)
-tokenPosn (TokenSequences _ (AlexPn a l c) ) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenSequences (AlexPn a l c) ) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenEq  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLT  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenGT (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
@@ -121,4 +124,5 @@ tokenPosn (TokenEmptyList (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenNot (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLCurly (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenRCurly (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenNewLine (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 }
