@@ -4,15 +4,17 @@ module Tokens where
 
 %wrapper "posn" 
 $digit = 0-9     
--- digits 
 $alpha = [a-zA-Z]    
--- alphabetic characters
-$white = [\ \t\f\v\r]
+$custom_whitespace = [\ \t\r\f\v]
+@newline = [$custom_whitespace]*\n
+@singleline_comment = \%\%.*@newline+
+@multiline_comment = \%\*[$white ~$white]*\*\%@newline+
 
 tokens :-
-  \n          { \p -> \s -> TokenNewLine p }
-  $white+         ; 
-  "--".*          ;  
+  $custom_whitespace+                   ;
+  @singleline_comment                   ;  
+  @multiline_comment                    ;
+  @newline+          { \p -> \s -> TokenNewLine p }
   \.length    { \p -> \s -> TokenLength p }
   \.push      { \p -> \s -> TokenPush p }
   \.pop       { \p -> \s -> TokenPop p }
