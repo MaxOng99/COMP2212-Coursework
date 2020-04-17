@@ -69,8 +69,43 @@ evalConstruct ((NewSingleList var), rest, e) = do evalConstruct ((head rest), (t
 evalConstruct ((DoubleListDeclare var Input), rest, e) = do evalConstruct ((head rest), (tail rest), (var, evaluatedExp):e) where
     evaluatedExp = lookUp "splInput" e
 
---evalConstruct ((DoubleListDeclare var exp), rest, e) = evalConstruct ((head rest), (tail rest), (var, evaluatedExp):e) where
---    evaluatedExp = evalExp
+-- IntDeclareAssignExp Evaluation
+evalConstruct ((IntDeclareAssignExp var exp), rest, e) = do evalConstruct ((head rest), (tail rest), (var, evaluatedExp):e) where
+    evaluatedExp = evalExp exp e
+
+-- IntDeclareAssignPop Evaluation
+evalConstruct ((IntDeclareAssignPop var list), rest, e) = case lookUp list e of
+    (List _) -> do evalConstruct ((head rest), (tail rest), updateListPop var1 var2 updatedEnv) where
+        var1 = (var, Int 0)
+        updatedEnv = var1:e
+
+-- BoolDeclareAssign Evaluation
+evalConstruct ((BoolDeclareAssign var exp), rest, e) = do evalConstruct ((head rest), (tail rest), (var evaluatedExp):e) where
+    evaluatedExp = evalExp exp e
+
+-- SingleListDeclareAssignPop Evaluation
+evalConstruct ((SingleListDeclareAssignPop var doubleList), rest, e) = case lookUp doubleList e of
+    (Sequences _) -> do evalConstruct ((head rest), (tail rest), updateSequencePop list doubleList updatedEnv) where
+        list = (var, List "[]")
+        updatedEnv = list:e
+
+-- SingleStackOperation Push Evaluation
+evalConstruct ((SingleStackOperation (Push var exp)), rest, e) = case evalExp exp e of 
+    evaluated1@(Int val) -> do evalConstruct ((head rest), (tail rest), updateListPush var var evaluated1 e)
+    evaluated2@(List stringList) -> do evalConstruct ((head rest), (tail rest), updateSequencePush var var evaluated2 e)
+
+-- SingleStackOperation Pop Evaluation
+evalConstruct ((SingleStackOperation (Pop var)), rest, e) = case lookUp var e of
+    (List _) -> do evalConstruct ((head rest), (tail rest), (update var poppedList e) where
+        poppedList = List (show $ tail list)
+        list = case (convertToHaskellList $ lookUp listVar e) of 
+            [] -> error "Cannot pop from an empty list"
+            (x:xs) -> (x:xs)
+    (Sequences _) -> do evalConstruct ((head rest), (tail rest), (update var poppedSeq e)) where
+        poppedSeq = Sequences (show $ tail poppedSeq)
+        seq = case (convertToHaskellList' $ lookUp var e) of
+            [] -> error "Cannot pop from an empty sequence"
+            (xs:xss) -> (xs:xss)
 
 -- Return Evaluation
 evalConstruct ((Return var), rest, e)

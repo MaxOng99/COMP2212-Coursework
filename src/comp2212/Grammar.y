@@ -56,10 +56,15 @@ Construct : Construct newline Construct                                         
           | while '('Exp')' '{' newline Construct newline '}'                                     { While $3 $7 }
           | Int var                                                             { IntDeclare $2 }
           | Bool var                                                            { BoolDeclare $2 }
-          | var '=' Exp                                                         { VarAssign $1 $3 }
-          | var '=' StackOperations                                             { StackOperationAssign $1 $3 }
           | 'Int[]' var '=' '[]'                                                { NewSingleList $2 }
           | 'Int[][]' var '=' Exp                                               { DoubleListDeclare $2 $4 }
+          | var '=' Exp                                                         { VarAssign $1 $3 }
+          | var '=' StackOperations                                             { StackOperationAssign $1 $3 }
+          | Int var '=' Exp                                                     { IntDeclareAssignExp $2 $3 }
+          | Int var '=' var pop                                                 { IntDeclareAssignPop $2 $4 }
+          | Bool var '=' Exp                                                    { BoolDeclareAssign $2 $4 }
+          | 'Int[]' var '=' var pop                                             { SingleListDeclareAssignPop $2 $4 }
+          | 'do' StackOperations                                                { SingleStackOperation $2 }
           | print '(' Exp ')'                                                   { Print $3 }
           | return var                                                          { Return $2 }
 
@@ -102,6 +107,11 @@ data Construct = IfThenElse Exp Construct Construct
                | Return String
                | Newline Construct Construct
                | Print Exp
+               | IntDeclareAssignExp String Exp
+               | IntDeclareAssignPop String String
+               | BoolDeclareAssign String Exp
+               | SingleListDeclareAssignPop String String
+               | SingleStackOperation StackOperations
                deriving (Show, Eq)
 
 data StackOperations = Push String Exp

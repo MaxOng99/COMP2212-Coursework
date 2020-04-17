@@ -3,8 +3,8 @@ package comp2212.solutions;
 import java.util.ArrayList;
 
 public class problem1 {
-
     public static void main(String[] args) throws Exception {
+	// Reading in the input integer stream from the input text file
         InputReader ir = new InputReader();
         ArrayList<ArrayList<Integer>> inputList = ir.readFile("./src/test/input1.txt");
 
@@ -18,5 +18,4 @@ public class problem1 {
         }
         System.out.println(shuffleList);
     }
-
 }
