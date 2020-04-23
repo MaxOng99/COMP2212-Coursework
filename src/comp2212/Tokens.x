@@ -15,6 +15,7 @@ tokens :-
   @singleline_comment                   ;  
   @multiline_comment                    ;
   @newline+          { \p -> \s -> TokenNewLine p }
+  \.sort      { \p -> \s -> TokenSort p }
   \.length    { \p -> \s -> TokenLength p }
   \.push      { \p -> \s -> TokenPush p }
   \.pop       { \p -> \s -> TokenPop p }
@@ -22,6 +23,7 @@ tokens :-
   if          { \p -> \s -> TokenIf p }
   else        { \p -> \s -> TokenElse p }
   while       { \p -> \s -> TokenWhile p }
+  do          { \p -> \s -> TokenDo p }
   Int         { \p -> \s -> TokenTypeInt p }
   Bool        { \p -> \s -> TokenTypeBool p }
   return      { \p -> \s -> TokenReturn p }
@@ -87,7 +89,9 @@ data Token =
   TokenLists AlexPosn          |
   TokenSequences AlexPosn      |
   TokenPrint AlexPosn          |
+  TokenDo AlexPosn             |
   TokenVar String AlexPosn     |
+  TokenSort AlexPosn           |
   TokenNot AlexPosn
   deriving (Eq,Show)
 
@@ -127,4 +131,6 @@ tokenPosn (TokenNot (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLCurly (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenRCurly (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenNewLine (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenDo (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenSort (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 }

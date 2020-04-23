@@ -11,9 +11,11 @@ import Tokens
     push   { TokenPush _ }
     pop    { TokenPop _ }
     empty  { TokenEmpty _ }
+    sort   { TokenSort _ }
     if     { TokenIf _ }
     else   { TokenElse _ }
     while  { TokenWhile _ }
+    do     { TokenDo _ }
     Int    { TokenTypeInt _ }
     Bool   { TokenTypeBool _ }
     return { TokenReturn _ }
@@ -47,12 +49,13 @@ import Tokens
 %nonassoc '<' '<=' '>=' '>'
 %left '+' '-'
 %left '*' '/'
-%nonassoc not
+%nonassoc not var
 
 %% 
 
 Construct : Construct newline Construct                                         { Newline $1 $3 }
           | if '('Exp')' '{' newline Construct newline '}' else '{' newline Construct newline '}' { IfThenElse $3 $7 $13 }
+          | if '('Exp')' '{' newline Construct newline '}'                      { IfThen $3 $7 }
           | while '('Exp')' '{' newline Construct newline '}'                                     { While $3 $7 }
           | Int var                                                             { IntDeclare $2 }
           | Bool var                                                            { BoolDeclare $2 }
@@ -60,12 +63,14 @@ Construct : Construct newline Construct                                         
           | 'Int[][]' var '=' Exp                                               { DoubleListDeclare $2 $4 }
           | var '=' Exp                                                         { VarAssign $1 $3 }
           | var '=' StackOperations                                             { StackOperationAssign $1 $3 }
-          | Int var '=' Exp                                                     { IntDeclareAssignExp $2 $3 }
+          | Int var '=' Exp                                                     { IntDeclareAssignExp $2 $4 }
           | Int var '=' var pop                                                 { IntDeclareAssignPop $2 $4 }
           | Bool var '=' Exp                                                    { BoolDeclareAssign $2 $4 }
           | 'Int[]' var '=' var pop                                             { SingleListDeclareAssignPop $2 $4 }
-          | 'do' StackOperations                                                { SingleStackOperation $2 }
+          | do StackOperations                                                  { SingleStackOperation $2 }
+          | do var sort                                                         { Sort $2 }
           | print '(' Exp ')'                                                   { Print $3 }
+          | return var newline                                                  { Return $2 }
           | return var                                                          { Return $2 }
 
 StackOperations : var push '('Exp')'                                            { Push $1 $4 }
@@ -97,6 +102,7 @@ parseError [] = error "Unknown Parse Error"
 parseError (t:ts) = error ("Parse error at line:column " ++ (tokenPosn t))
 
 data Construct = IfThenElse Exp Construct Construct
+               | IfThen Exp Construct
                | While Exp Construct 
                | IntDeclare String 
                | BoolDeclare String
@@ -112,6 +118,7 @@ data Construct = IfThenElse Exp Construct Construct
                | BoolDeclareAssign String Exp
                | SingleListDeclareAssignPop String String
                | SingleStackOperation StackOperations
+               | Sort String
                deriving (Show, Eq)
 
 data StackOperations = Push String Exp

@@ -17,12 +17,17 @@ evalConstruct :: State -> IO State
 -- IfThenElse Evaluation
 evalConstruct ((IfThenElse exp c1 c2), rest, e)
     | evalExp exp e == BoolTrue = do evalConstruct ((head new_cons1), (tail new_cons1), e)
-    | otherwise = do evalConstruct ((head new_cons2), (tail new_cons2), e)
-    where
+    | otherwise = do evalConstruct ((head new_cons2), (tail new_cons2), e) where
         cons1_list = formatConstruct c1
         cons2_list = formatConstruct c2
         new_cons1 = cons1_list ++ rest
         new_cons2 = cons2_list ++ rest
+
+evalConstruct ((IfThen exp c), rest, e) 
+    | evalExp exp e == BoolTrue = do evalConstruct (head new_cons1, tail new_cons1, e)
+    | otherwise = do evalConstruct (head rest, tail rest, e) where
+        new_cons1 = cons1_list ++ rest
+        cons1_list = formatConstruct c
 
 -- While Evaluation 
 evalConstruct ((While exp c), rest, e)
@@ -75,17 +80,17 @@ evalConstruct ((IntDeclareAssignExp var exp), rest, e) = do evalConstruct ((head
 
 -- IntDeclareAssignPop Evaluation
 evalConstruct ((IntDeclareAssignPop var list), rest, e) = case lookUp list e of
-    (List _) -> do evalConstruct ((head rest), (tail rest), updateListPop var1 var2 updatedEnv) where
+    (List _) -> do evalConstruct ((head rest), (tail rest), updateListPop var list updatedEnv) where
         var1 = (var, Int 0)
         updatedEnv = var1:e
 
 -- BoolDeclareAssign Evaluation
-evalConstruct ((BoolDeclareAssign var exp), rest, e) = do evalConstruct ((head rest), (tail rest), (var evaluatedExp):e) where
+evalConstruct ((BoolDeclareAssign var exp), rest, e) = do evalConstruct ((head rest), (tail rest), (var, evaluatedExp):e) where
     evaluatedExp = evalExp exp e
 
 -- SingleListDeclareAssignPop Evaluation
 evalConstruct ((SingleListDeclareAssignPop var doubleList), rest, e) = case lookUp doubleList e of
-    (Sequences _) -> do evalConstruct ((head rest), (tail rest), updateSequencePop list doubleList updatedEnv) where
+    (Sequences _) -> do evalConstruct ((head rest), (tail rest), updateSequencePop var doubleList updatedEnv) where
         list = (var, List "[]")
         updatedEnv = list:e
 
@@ -96,16 +101,20 @@ evalConstruct ((SingleStackOperation (Push var exp)), rest, e) = case evalExp ex
 
 -- SingleStackOperation Pop Evaluation
 evalConstruct ((SingleStackOperation (Pop var)), rest, e) = case lookUp var e of
-    (List _) -> do evalConstruct ((head rest), (tail rest), (update var poppedList e) where
+    (List _) -> do evalConstruct ((head rest), (tail rest), (update var poppedList e)) where
         poppedList = List (show $ tail list)
-        list = case (convertToHaskellList $ lookUp listVar e) of 
+        list = case (convertToHaskellList $ lookUp var e) of 
             [] -> error "Cannot pop from an empty list"
             (x:xs) -> (x:xs)
     (Sequences _) -> do evalConstruct ((head rest), (tail rest), (update var poppedSeq e)) where
-        poppedSeq = Sequences (show $ tail poppedSeq)
+        poppedSeq = Sequences (show $ tail seq)
         seq = case (convertToHaskellList' $ lookUp var e) of
             [] -> error "Cannot pop from an empty sequence"
             (xs:xss) -> (xs:xss)
+
+evalConstruct ((Sort var), rest, e) = evalConstruct (head rest, tail rest, update var sortedList e) where
+    sortedList = List (show $ list)
+    list = mergeSort $ convertToHaskellList $ lookUp var e
 
 -- Return Evaluation
 evalConstruct ((Return var), rest, e)
@@ -271,6 +280,21 @@ formatConstruct x = [x]
 -- Parses source program and input number sequence and converts it into a state
 convertToState :: Construct -> [[Int]] -> State
 convertToState cons inpList = (head (formatConstruct cons), tail (formatConstruct cons), [("splInput", Sequences (show inpList))])
+
+mergeSort :: (Ord a) => [a] -> [a]
+mergeSort [] = []
+mergeSort [a] = [a]
+mergeSort a =
+  merge (mergeSort firstFew) (mergeSort lastFew)
+    where firstFew = take ((length a) `div` 2) a
+          lastFew = drop ((length a) `div` 2) a
+-- Expects a and b to already be sorted
+merge :: (Ord a) => [a] -> [a] -> [a]
+merge a [] = a
+merge [] b = b
+merge (a:as) (b:bs)
+  | a < b     = a:(merge as (b:bs))
+  | otherwise = b:(merge (a:as) bs)
 
 get1st (a,_) = a
 
