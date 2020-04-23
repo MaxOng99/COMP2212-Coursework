@@ -17,12 +17,17 @@ typeOfConstruct :: TypeCheckerState -> TypeCheckerState
 typeOfConstruct (c, [], tenv) = (c, [], tenv) 
 typeOfConstruct (IfThenElse exp c1 c2, rest, tenv)
     | typeOfExp exp tenv == SplBool = typeOfConstruct (fromJust $ safeHead new_rest, safeTail new_rest, tenv) 
-    | otherwise = error "if-then-else construct expects a boolean expression. Provided expression is not a boolean" where
+    | otherwise = error ("if-then-else construct expects a boolean expression. '" ++ show exp ++ "' is not a boolean") where
         new_rest = formatConstruct c1 ++ formatConstruct c2 ++ rest
+
+typeOfConstruct (IfThen exp c, rest, tenv)
+    | typeOfExp exp tenv == SplBool = typeOfConstruct (fromJust $ safeHead new_rest, safeTail new_rest, tenv)
+    | otherwise = error ("if construct expects a boolean expression. '" ++ show exp ++ "' is not a boolean") where
+        new_rest = formatConstruct c ++ rest
 
 typeOfConstruct (While exp c, rest, tenv)
     | typeOfExp exp tenv == SplBool = typeOfConstruct (fromJust $ safeHead new_rest, safeTail new_rest, tenv)
-    | otherwise = error "while construct expects a boolean expression. Provided expression is not a boolean" where
+    | otherwise = error ("While construct expects a boolean expression. '" ++ (show exp) ++ "' is not a boolean") where
         new_rest = formatConstruct c ++ rest
 
 typeOfConstruct (IntDeclare var, rest, tenv) = typeOfConstruct (fromJust $ safeHead rest, safeTail rest, addBinding var SplInt tenv)
@@ -54,6 +59,41 @@ typeOfConstruct (DoubleListDeclare var exp, rest, tenv) = typeOfConstruct (fromJ
 
 typeOfConstruct (Print exp, rest, tenv) = typeOfConstruct (fromJust $ safeHead rest, safeTail rest, tenv)
 typeOfConstruct (Return var, rest, tenv) = (Return var, [], tenv)
+
+typeOfConstruct (IntDeclareAssignExp var exp, rest, tenv)
+    | expType == SplInt = typeOfConstruct (fromJust $ safeHead rest, safeTail rest, addBinding var SplInt tenv)
+    | otherwise = error ("'" ++ var ++ "' expects type SplInt, but " ++ show expType ++ " was supplied to it") where
+        expType = typeOfExp exp tenv
+
+typeOfConstruct (IntDeclareAssignPop var list, rest, tenv)
+    | listType == SplSingleList = typeOfConstruct (fromJust $ safeHead rest, safeTail rest, addBinding var SplInt tenv)
+    | otherwise = error (var ++ " expects type SplInt, but " ++ show listType ++ " was supplied to it") where
+        listType = lookUpType list tenv
+
+typeOfConstruct (BoolDeclareAssign var exp, rest, tenv)
+    | expType == SplBool = typeOfConstruct (fromJust $ safeHead rest, safeTail rest, addBinding var SplBool tenv)
+    | otherwise = error ("'" ++ var ++ "' expects type SplBool, but " ++ show expType ++ " was supplied to it") where
+        expType = typeOfExp exp tenv
+
+typeOfConstruct (SingleListDeclareAssignPop var doubleList, rest, tenv)
+    | expType == SplDoubleList = typeOfConstruct (fromJust $ safeHead rest, safeTail rest, addBinding var SplSingleList tenv)
+    | otherwise = error (var ++ " expects type SplSingleList, but " ++ show expType ++ " was supplied to it") where
+        expType = lookUpType doubleList tenv
+
+typeOfConstruct (SingleStackOperation (Push var exp), rest, tenv)
+    | lookUpType var tenv == SplSingleList = if expType == SplInt then newState else error ("Cannot push element of type " ++ show expType ++ " to SplSingleList")
+    | lookUpType var tenv == SplDoubleList = if expType == SplSingleList then newState else error ("Cannot push element of type " ++ show expType ++ " to SplDoubleList")
+    | otherwise = error (var ++ " is not of a list type. Push operation must be done on a list type") where
+        newState = typeOfConstruct (fromJust $ safeHead rest, safeTail rest, tenv) 
+        expType = typeOfExp exp tenv
+
+typeOfConstruct (SingleStackOperation (Pop var), rest, tenv)
+    | lookUpType var tenv == SplSingleList || lookUpType var tenv == SplDoubleList = typeOfConstruct (fromJust $ safeHead rest, safeTail rest, tenv) 
+    | otherwise = error ("Unable to pop from " ++ show var ++ ". Pop operation not supported for " ++ (show $ lookUpType var tenv))
+
+typeOfConstruct (Sort var, rest, tenv)
+    | lookUpType var tenv == SplSingleList = typeOfConstruct (fromJust $ safeHead rest, safeTail rest, tenv)
+    | otherwise = error (show var ++ " is not of type SplSingleList. Sort operation not supported for " ++ (show $ lookUpType var tenv))
 
 -- Type checker for expressions -- 
 typeOfExp :: Exp -> TypeEnvironment -> Types
@@ -105,9 +145,9 @@ safeHead (x:xs) = Just x
 checkArithmetic :: String -> Exp -> Exp -> TypeEnvironment -> Types
 checkArithmetic operator e1 e2 tenv
     | typeOfExp e1 tenv == SplInt && typeOfExp e2 tenv == SplInt = SplInt
-    | typeOfExp e1 tenv /= SplInt = error (operator ++ " expects two integers. First argument is not an interger")
-    | typeOfExp e2 tenv /= SplInt = error (operator ++ " expects two integers. Second argument is not an integer")
-    | otherwise = error (operator ++ " expects two integers. Both arguments are not integers")
+    | typeOfExp e1 tenv /= SplInt = error (operator ++ " expects two integers. '" ++ (show e1) ++ "' is not an interger")
+    | typeOfExp e2 tenv /= SplInt = error (operator ++ " expects two integers. '" ++ (show e2) ++ "' is not an integer")
+    | otherwise = error (operator ++ " expects two integers. '" ++ (show e1) ++ "' and '" ++ (show e2) ++ "' are not integers")
 
 checkComparator :: String -> Exp -> Exp -> TypeEnvironment -> Types
 checkComparator operator e1 e2 tenv
@@ -117,7 +157,7 @@ checkComparator operator e1 e2 tenv
     | otherwise = error (operator ++ " expects two boolean. Bothh arguemtns are not boolean")
 
 lookUpType :: String -> TypeEnvironment -> Types
-lookUpType x [] = error "Variable binding not found"
+lookUpType x [] = error ("Variable '" ++ x ++ "' not declared")
 lookUpType x ((var, t):tenv) | x == var = t
                              | otherwise = lookUpType x tenv
 

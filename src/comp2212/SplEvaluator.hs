@@ -145,7 +145,9 @@ evalExp (Input) e = Input
 
 
 -- List length function reduction
-evalExp (Length name) e = Int (length (convertToHaskellList $ lookUp name e))
+evalExp (Length name) e = case lookUp name e of 
+    list@(List xs) -> Int (length $ convertToHaskellList list)
+    sequences@(Sequences xss) -> Int (length $ convertToHaskellList' sequences)
 
 
 -- List empty function reduction

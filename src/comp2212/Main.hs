@@ -14,7 +14,7 @@ main = do args <- getArgs
           --putStrLn ("Parsed program is " ++ show parsedProgram ++ "\n")
           --putStrLn ("Initiating type checking...")
           let typeCheckingComplete = initiateTypeChecking parsedProgram
-          --putStrLn ("Type checking success -- " ++ show typeCheckingComplete)
+          putStrLn ("Type checking success -- " ++ show typeCheckingComplete)
           let inputSequence = generateInputSequences $ splitCol $ splitRow inputStream
           result <- evalLoop (convertToState parsedProgram inputSequence)
           putStrLn (formatOutput $ convertToIntList result)
