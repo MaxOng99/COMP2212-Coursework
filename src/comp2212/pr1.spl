@@ -1,9 +1,7 @@
 Int[][] in = sequences
-Int[] first = []
-Int[] second = []
+Int[] first = in.pop
+Int[] second = in.pop
 Int[] shuffle = []
-first = in.pop
-second = in.pop
 Int x
 Int y
 Int z
@@ -11,8 +9,8 @@ while (not first.empty) {
 	x = first.pop
 	y = first.pop
 	z = second.pop
-	shuffle = shuffle.push(x)
-	shuffle = shuffle.push(y)
-	shuffle = shuffle.push(z)
+	do shuffle.push(x)
+	do shuffle.push(y)
+	do shuffle.push(z)
 }
 return shuffle
