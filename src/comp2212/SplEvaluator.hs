@@ -195,6 +195,11 @@ evalExp (LTE (Int a) (Int b)) e
     | otherwise = BoolFalse
 evalExp (LTE e1 e2) e = evalExp (LTE (evalExp e1 e) (evalExp e2 e)) e
 
+evalExp (EqualTo (Int a) (Int b)) e
+    | (a == b) == True = BoolTrue
+    | otherwise = BoolFalse
+evalExp (EqualTo e1 e2) e = evalExp (EqualTo (evalExp e1 e) (evalExp e2 e)) e
+
 -- Not expression evaluation
 evalExp (Not BoolTrue) e = BoolFalse
 evalExp (Not BoolFalse) e = BoolTrue

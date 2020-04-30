@@ -13,4 +13,10 @@ while (not first.empty) {
 	do shuffle.push(y)
 	do shuffle.push(z)
 }
+
+if (1 == 2) {
+	print(1)
+} else{
+	print(true)
+}
 return shuffle

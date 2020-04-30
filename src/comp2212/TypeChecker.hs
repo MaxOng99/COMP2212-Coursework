@@ -123,6 +123,7 @@ typeOfExp (LessThan e1 e2) tenv = checkComparator "<" e1 e2 tenv
 typeOfExp (GreaterThan e1 e2) tenv = checkComparator ">" e1 e2 tenv
 typeOfExp (LTE e1 e2) tenv = checkComparator "<=" e1 e2 tenv
 typeOfExp (GTE e1 e2) tenv = checkComparator ">=" e1 e2 tenv
+typeOfExp (EqualTo e1 e2) tenv = checkComparator "==" e1 e2 tenv
 typeOfExp (Not e) tenv
     | typeOfExp e tenv == SplBool = SplBool
     | otherwise = error "not expects a boolean. Argument provided is not a boolean"
@@ -152,9 +153,9 @@ checkArithmetic operator e1 e2 tenv
 checkComparator :: String -> Exp -> Exp -> TypeEnvironment -> Types
 checkComparator operator e1 e2 tenv
     | typeOfExp e1 tenv == SplInt && typeOfExp e2 tenv == SplInt = SplBool
-    | typeOfExp e1 tenv /= SplInt = error (operator ++ " expects two boolean. First argument is not a boolean")
-    | typeOfExp e2 tenv /= SplInt = error (operator ++ " expects two boolean. Second argument is not a boolean")
-    | otherwise = error (operator ++ " expects two boolean. Bothh arguemtns are not boolean")
+    | typeOfExp e1 tenv /= SplInt = error (operator ++ " expects two integer. First argument is not an integer")
+    | typeOfExp e2 tenv /= SplInt = error (operator ++ " expects two integer. Second argument is not an integer")
+    | otherwise = error (operator ++ " expects two integer. Both arguments are not boolean")
 
 lookUpType :: String -> TypeEnvironment -> Types
 lookUpType x [] = error ("Variable '" ++ x ++ "' not declared")

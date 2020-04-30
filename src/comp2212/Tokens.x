@@ -36,6 +36,7 @@ tokens :-
   \>          { \p -> \s -> TokenGT p }
   \<\=        { \p -> \s -> TokenLTE p }
   \>\=        { \p -> \s -> TokenGTE p }
+  \==         { \p -> \s -> TokenEquality p }
   not         { \p -> \s -> TokenNot p }
   \+          { \p -> \s -> TokenPlus p }
   \-          { \p -> \s -> TokenMinus p }
@@ -92,6 +93,7 @@ data Token =
   TokenDo AlexPosn             |
   TokenVar String AlexPosn     |
   TokenSort AlexPosn           |
+  TokenEquality AlexPosn       |
   TokenNot AlexPosn
   deriving (Eq,Show)
 
@@ -133,4 +135,5 @@ tokenPosn (TokenRCurly (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenNewLine (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenDo (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenSort (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenEquality (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 }

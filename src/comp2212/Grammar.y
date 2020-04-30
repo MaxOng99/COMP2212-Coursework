@@ -28,6 +28,7 @@ import Tokens
     '>'    { TokenGT _ }
     '<='   { TokenLTE _ }
     '>='   { TokenGTE _ }
+    '=='   { TokenEquality _ }
     not    { TokenNot _ }
     '+'    { TokenPlus _ }
     '-'    { TokenMinus _ }
@@ -46,7 +47,7 @@ import Tokens
     print    { TokenPrint _ }
 
 %left newline
-%nonassoc '<' '<=' '>=' '>'
+%nonassoc '<' '<=' '>=' '>' '=='
 %left '+' '-'
 %left '*' '/'
 %nonassoc not var
@@ -84,6 +85,7 @@ Exp : Exp '<' Exp       { LessThan $1 $3 }
     | Exp '-' Exp       { Minus $1 $3 }
     | Exp '*' Exp       { Multiply $1 $3 }
     | Exp '/' Exp       { Divide $1 $3 }
+    | Exp '==' Exp      { EqualTo $1 $3 }
     | not Exp           { Not $2 }
     | var length        { Length $1 }
     | var empty         { Empty $1 }
@@ -143,6 +145,7 @@ data Exp = Int Int
          | GTE Exp Exp
          | LTE Exp Exp
          | Not Exp
+         | EqualTo Exp Exp
          deriving (Show, Eq)
 
 data Types = SplInt | SplBool | SplSingleList | SplDoubleList
