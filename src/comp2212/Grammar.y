@@ -22,6 +22,7 @@ import Tokens
     true   { TokenTrue _ }
     false  { TokenFalse _ }
     digit  { TokenInt $$ _ }
+    string { TokenString $$ _ }
     list   { TokenSequence $$ _ }
     '='    { TokenEq _ }
     '<'    { TokenLT _ }
@@ -92,6 +93,7 @@ Exp : Exp '<' Exp       { LessThan $1 $3 }
     | digit             { Int $1 }
     | true              { BoolTrue }
     | false             { BoolFalse }
+    | string            { String $1 }
     | var               { Var $1 }
     | list              { List $1 }
     | sequences         { Input }
@@ -132,6 +134,7 @@ data Exp = Int Int
          | BoolFalse
          | Var String
          | List String
+         | String String
          | Input
          | Sequences String
          | Length String
@@ -148,7 +151,7 @@ data Exp = Int Int
          | EqualTo Exp Exp
          deriving (Show, Eq)
 
-data Types = SplInt | SplBool | SplSingleList | SplDoubleList
+data Types = SplInt | SplBool | SplSingleList | SplDoubleList | SplString
     deriving (Show, Eq)
 
 }

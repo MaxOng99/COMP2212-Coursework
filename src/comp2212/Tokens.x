@@ -6,15 +6,18 @@ module Tokens where
 $digit = 0-9     
 $alpha = [a-zA-Z]    
 $custom_whitespace = [\ \t\r\f\v]
+$graphic    = $printable # $white
 @newline = [$custom_whitespace]*\n
 @singleline_comment = \%\%.*@newline+
 @multiline_comment = \%\*[$white ~$white]*\*\%@newline+
+@string = \" ($graphic # \")* \"
 
 tokens :-
   $custom_whitespace+                   ;
   @singleline_comment                   ;  
   @multiline_comment                    ;
   @newline+          { \p -> \s -> TokenNewLine p }
+  @string     { \p -> \s -> TokenString s p }
   \.sort      { \p -> \s -> TokenSort p }
   \.length    { \p -> \s -> TokenLength p }
   \.push      { \p -> \s -> TokenPush p }
@@ -94,6 +97,7 @@ data Token =
   TokenVar String AlexPosn     |
   TokenSort AlexPosn           |
   TokenEquality AlexPosn       |
+  TokenString String AlexPosn  |
   TokenNot AlexPosn
   deriving (Eq,Show)
 
@@ -136,4 +140,5 @@ tokenPosn (TokenNewLine (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenDo (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenSort (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenEquality (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenString _ (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 }

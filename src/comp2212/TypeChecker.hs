@@ -128,6 +128,8 @@ typeOfExp (Not e) tenv
     | typeOfExp e tenv == SplBool = SplBool
     | otherwise = error "not expects a boolean. Argument provided is not a boolean"
 
+typeOfExp (String xs) tenv = SplString
+
 
 
 -- Helper Functions -- 

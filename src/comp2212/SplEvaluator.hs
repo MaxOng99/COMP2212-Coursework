@@ -122,8 +122,14 @@ evalConstruct ((Return var), rest, e)
     | otherwise = error "Return must be called at the end of the program"
 
 
+evalConstruct (Print (String xs), rest , e) = do putStrLn (unparse (String xs))
+                                                 evalConstruct (head rest, tail rest, e)
+
 evalConstruct ((Print exp), rest, e) = do putStrLn (show $ evalExp exp e)
                                           evalConstruct (head rest, tail rest, e)
+
+unparse :: Exp -> String
+unparse (String xs) = [ x | x <- xs, x /= '\"' ]
 
 
 evalExp :: Exp -> Environment -> Exp
@@ -204,6 +210,8 @@ evalExp (EqualTo e1 e2) e = evalExp (EqualTo (evalExp e1 e) (evalExp e2 e)) e
 evalExp (Not BoolTrue) e = BoolFalse
 evalExp (Not BoolFalse) e = BoolTrue
 evalExp (Not exp) e = evalExp (Not (evalExp exp e)) e
+
+evalExp (String xs) e = (String xs)
 
 -- Lookup variable value function
 lookUp :: String -> Environment -> Exp
