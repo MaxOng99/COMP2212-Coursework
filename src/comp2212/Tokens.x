@@ -6,7 +6,7 @@ module Tokens where
 $digit = 0-9     
 $alpha = [a-zA-Z]    
 $custom_whitespace = [\ \t\r\f\v]
-$graphic    = $printable # $white
+$graphic    = $printable
 @newline = [$custom_whitespace]*\n
 @singleline_comment = \%\%.*@newline+
 @multiline_comment = \%\*[$white ~$white]*\*\%@newline+
@@ -39,12 +39,13 @@ tokens :-
   \>          { \p -> \s -> TokenGT p }
   \<\=        { \p -> \s -> TokenLTE p }
   \>\=        { \p -> \s -> TokenGTE p }
-  \==         { \p -> \s -> TokenEquality p }
+  \=\=         { \p -> \s -> TokenEquality p }
   not         { \p -> \s -> TokenNot p }
   \+          { \p -> \s -> TokenPlus p }
   \-          { \p -> \s -> TokenMinus p }
   \*          { \p -> \s -> TokenTimes p }
   \/          { \p -> \s -> TokenDiv p }
+  \%          { \p -> \s -> TokenModulo p }
   \(          { \p -> \s -> TokenLParen p }
   \)          { \p -> \s -> TokenRParen p }
   \{          { \p -> \s -> TokenLCurly p }
@@ -98,6 +99,7 @@ data Token =
   TokenSort AlexPosn           |
   TokenEquality AlexPosn       |
   TokenString String AlexPosn  |
+  TokenModulo AlexPosn         |
   TokenNot AlexPosn
   deriving (Eq,Show)
 
@@ -141,4 +143,5 @@ tokenPosn (TokenDo (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenSort (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenEquality (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenString _ (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenModulo (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 }

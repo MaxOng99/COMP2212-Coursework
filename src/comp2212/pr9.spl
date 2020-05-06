@@ -1,0 +1,18 @@
+Int[][] in = sequences
+Int[] output = []
+
+
+if (not in.empty) {
+	Int[] first = in.pop
+	Int a
+	Int counter
+
+	while(not first.empty) {
+		a = first.pop
+		counter = counter + 1
+
+		do output.push(a)
+		do output.push(counter)
+	}
+}
+return output

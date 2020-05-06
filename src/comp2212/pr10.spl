@@ -1,0 +1,49 @@
+Int[][] in = sequences
+Int[] output = []
+Int[] fib = []
+
+if (not in.empty) {
+	
+	Int[] first = in.pop
+	do in.push(first)
+	Int prev = 0
+	Int currentSum = 1
+	Int firstLength = first.length
+	do fib.push(1)
+
+	while((firstLength - 1)  > 0) {
+		Int temp = fib.pop
+		do fib.push(temp)
+		currentSum = currentSum + prev
+		do fib.push(currentSum)
+		prev = temp
+		firstLength = firstLength - 1
+	}
+
+	firstLength = first.length
+	Int[] duplicate = []
+	duplicate = fib
+
+	Int n = 1
+	Int sum = 0 
+
+	while(firstLength > 0) {
+
+		Int popCount = firstLength - n
+
+		while(popCount > 0) {
+			do duplicate.pop
+			popCount = popCount - 1
+		}
+
+		Int coefficient = duplicate.pop
+		Int poppedNum = first.pop
+		sum = sum + coefficient*poppedNum
+		firstLength = firstLength - 1
+	}
+
+	do output.push(sum)
+	first = in.pop
+	duplicate = fib
+}
+return output

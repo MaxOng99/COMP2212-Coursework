@@ -11,13 +11,14 @@ main = do args <- getArgs
           sourceCode <- readFile (args !! 0)
           inputStream <- getContents
           let parsedProgram = parseCalc (alexScanTokens sourceCode)
-          --putStrLn ("Parsed program is " ++ show parsedProgram ++ "\n")
-          --putStrLn ("Initiating type checking...")
           let typeCheckingComplete = initiateTypeChecking parsedProgram
-          putStrLn ("Type checking success -- " ++ show typeCheckingComplete)
-          let inputSequence = generateInputSequences $ splitCol $ splitRow inputStream
-          result <- evalLoop (convertToState parsedProgram inputSequence)
-          putStrLn (formatOutput $ convertToIntList result)
+          if (typeCheckingComplete) then 
+              do let inputSequence = generateInputSequences $ splitCol $ splitRow inputStream
+                 result <- evalLoop (convertToState parsedProgram inputSequence)
+                 putStr (formatOutput $ convertToIntList result)
+          else putStr ("Type Checker failed")
+
+          
 
 splitRow :: String -> [String]
 splitRow xs = lines xs
@@ -39,6 +40,7 @@ checkAllEmpty (x:xs)
 
 formatOutput :: [Int] -> String
 formatOutput [] = []
+formatOutput [x] = show x
 formatOutput (x:xs) = formatOutput xs ++ "\n" ++ show x
 
 convertToIntList :: Exp -> [Int]

@@ -1,11 +1,15 @@
-Int[][] inputList = sequences
-Int[] firstList = inputList.pop
+Int[][] in = sequences
 Int[] outputList = []
-Int sum
-Int a
-while (not firstList.empty) {
-	a = firstList.pop
-	sum = sum + a
-	do outputList.push(sum)
+
+if (not in.empty) {
+	Int[] firstList = in.pop
+
+	Int sum
+	Int a
+	while (not firstList.empty) {
+		a = firstList.pop
+		sum = sum + a
+		do outputList.push(sum)
+	}
 }
 return outputList

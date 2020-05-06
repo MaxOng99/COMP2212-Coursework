@@ -1,19 +1,24 @@
 Int[][] in = sequences
-Int[] first = in.pop
-Int[] second = in.pop
-Int[] third = in.pop
 Int[] shuffle = []
-Int a
-Int b
-Int c
-while (first.length > 0) {
-	a = first.pop
-	b = second.pop
-	c = third.pop
-	do shuffle.push(c)
-	do shuffle.push(b)
-	do shuffle.push(a)
-	do shuffle.push(a + b)
-	do shuffle.push(b + c)
+
+if (not in.empty) {
+	Int[] first = in.pop
+	Int[] second = in.pop
+	Int[] third = in.pop
+
+	Int a
+	Int b
+	Int c
+	while (first.length > 0) {
+		a = first.pop
+		b = second.pop
+		c = third.pop
+
+		do shuffle.push(c)
+		do shuffle.push(b)
+		do shuffle.push(a)
+		do shuffle.push(a + b)
+		do shuffle.push(b + c)
+	}
 }
 return shuffle

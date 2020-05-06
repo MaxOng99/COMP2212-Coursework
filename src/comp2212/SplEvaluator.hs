@@ -121,15 +121,8 @@ evalConstruct ((Return var), rest, e)
     | rest == [] = do return ((Return var), rest, e)
     | otherwise = error "Return must be called at the end of the program"
 
-
-evalConstruct (Print (String xs), rest , e) = do putStrLn (unparse (String xs))
-                                                 evalConstruct (head rest, tail rest, e)
-
-evalConstruct ((Print exp), rest, e) = do putStrLn (show $ evalExp exp e)
+evalConstruct ((Print exp), rest, e) = do putStrLn (unparse $ evalExp exp e)
                                           evalConstruct (head rest, tail rest, e)
-
-unparse :: Exp -> String
-unparse (String xs) = [ x | x <- xs, x /= '\"' ]
 
 
 evalExp :: Exp -> Environment -> Exp
@@ -157,9 +150,9 @@ evalExp (Length name) e = case lookUp name e of
 
 
 -- List empty function reduction
-evalExp (Empty name) e 
-    | length (convertToHaskellList $ lookUp name e) == 0 = BoolTrue
-    | otherwise = BoolFalse
+evalExp (Empty name) e = case lookUp name e of
+    list@(List xs) -> if length (convertToHaskellList list) == 0 then BoolTrue else BoolFalse
+    sequences@(Sequences xss) -> if length (convertToHaskellList' sequences) == 0 then BoolTrue else BoolFalse
 
 -- Addition expression reduction
 evalExp (Add (Int a) (Int b)) e = Int (a + b)
@@ -176,6 +169,9 @@ evalExp (Multiply e1 e2) e = evalExp (Multiply (evalExp e1 e) (evalExp e2 e)) e
 -- Divide expression reduction
 evalExp (Divide (Int a) (Int b)) e = Int (a `div` b)
 evalExp (Divide e1 e2) e = evalExp (Divide (evalExp e1 e) (evalExp e2 e)) e
+
+evalExp (Modulo (Int a) (Int b)) e = Int (a `mod` b)
+evalExp (Modulo e1 e2) e = evalExp (Modulo (evalExp e1 e) (evalExp e2 e)) e
 
 -- LessThan expression reduction
 evalExp (LessThan (Int a) (Int b)) e 
@@ -214,6 +210,15 @@ evalExp (Not exp) e = evalExp (Not (evalExp exp e)) e
 evalExp (String xs) e = (String xs)
 
 -- Lookup variable value function
+
+unparse :: Exp -> String
+unparse (Int x) = show x
+unparse (List xs) = xs
+unparse (String xs) = [ x | x <- xs, x /= '\"']
+unparse (Sequences xss) = xss
+unparse BoolTrue = "true"
+unparse BoolFalse = "false"
+
 lookUp :: String -> Environment -> Exp
 lookUp name env = get2nd (getVarTuple name env)
 

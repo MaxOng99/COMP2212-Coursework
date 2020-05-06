@@ -1,24 +1,26 @@
 Int[][] in = sequences
-Int[] firstList = in.pop
-Int[] secondList = in.pop
 Int[] shuffleList = []
-Int a
-Int b
-Int c 
-Int d
-if (secondList.length >= 2) {
-	do shuffleList.push(0)
-	do secondList.pop
-	a = secondList.pop
-	b = firstList.pop
-	do shuffleList.push(a)
-	do shuffleList.push(b)
-	while (secondList.length >= 2) {
+do shuffleList.push(0)
+
+if (not in.empty) {
+	Int[] firstList = in.pop
+	Int[] secondList = in.pop
+
+	Int a
+	Int b
+	Int c 
+	Int d
+
+	while (not secondList.empty) {
 		do secondList.pop
-		c = secondList.pop
-		d = firstList.pop
-		do shuffleList.push(c)
-		do shuffleList.push(d)
+
+		if (not secondList.empty) {
+			a = secondList.pop
+			b = firstList.pop
+			do shuffleList.push(a)
+			do shuffleList.push(b)
+		}
 	}
+
 }
 return shuffleList

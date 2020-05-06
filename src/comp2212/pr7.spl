@@ -1,0 +1,28 @@
+Int[][] in = sequences
+Int[] output = []
+
+if (not in.empty) {
+	Int[] first = in.pop
+
+	Int a
+
+	Bool flag = false
+	while (not first.empty) {
+		do first.pop
+		if (not first.empty) {
+			do first.pop
+			if (flag) {
+
+				if (not first.empty) {
+					do first.pop
+					flag = not flag
+				}
+			}
+			if (not first.empty) {
+				a = first.pop
+				do output.push(a)
+			}
+		}
+	}
+}
+return output
