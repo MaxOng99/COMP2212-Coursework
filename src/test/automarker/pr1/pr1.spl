@@ -1,18 +1,22 @@
 Int[][] in = sequences
-Int[] first = []
-Int[] second = []
 Int[] shuffle = []
-first = in.pop
-second = in.pop
-Int x
-Int y
-Int z
-while (not first.empty) {
-	x = first.pop
-	y = first.pop
-	z = second.pop
-	shuffle = shuffle.push(x)
-	shuffle = shuffle.push(y)
-	shuffle = shuffle.push(z)
+
+if (not (in.empty)) {
+	Int[] first = in.pop
+	Int[] second = in.pop
+	Int x
+	Int y
+	Int z
+
+	while (not first.empty) {
+		x = first.pop
+		do shuffle.push(x)
+		if (not first.empty) {
+			y = first.pop
+			z = second.pop
+			do shuffle.push(y)
+			do shuffle.push(z)
+		}
+	}
 }
 return shuffle

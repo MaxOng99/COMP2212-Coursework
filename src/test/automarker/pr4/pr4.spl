@@ -1,16 +1,19 @@
 Int[][] in = sequences
-Int[] firstList = []
 Int[] outputList = []
-firstList = in.pop
-Int num1
-Int num2
-Int num3
-while (firstList.length >= 3) {
-	num1 = firstList.pop
-	num2 = firstList.pop
-	num3 = firstList.pop
-	outputList = outputList.push(num3)
-	outputList = outputList.push(num2*2)
-	outputList = outputList.push(num1*3-1)
+
+if (not in.empty) {
+	Int[] firstList = in.pop
+	Int num1
+	Int num2
+	Int num3
+	
+	while (firstList.length >= 3) {
+		num1 = firstList.pop
+		num2 = firstList.pop
+		num3 = firstList.pop
+		do outputList.push(num3)
+		do outputList.push(num2*2)
+		do outputList.push(num1*3-1)
+	}
 }
 return outputList

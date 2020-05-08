@@ -1,0 +1,30 @@
+Int[][] in = sequences
+Int[] output = []
+
+
+if (not in.empty) {
+	
+	Int[] first = in.pop
+	Int[] second = in.pop
+	Int a
+	Int b
+	Int checkSum
+	Int loopCount
+
+	while (not first.empty) {
+		a = first.pop
+		b = second.pop
+
+		do output.push(a)
+		do output.push(b)
+		checkSum = checkSum + (a-b)
+		loopCount = loopCount + 1
+
+		if (loopCount == 5) {
+			do output.push(checkSum)
+			loopCount = 0
+			checkSum = 0
+		}
+	}
+}
+return output

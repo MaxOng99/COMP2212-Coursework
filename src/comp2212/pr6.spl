@@ -19,16 +19,20 @@ if (not in.empty) {
 		if (not first.empty) {
 			b = first.pop
 			c = second.pop
-			d = second.pop
 
 			do output.push(b)
 			do output.push(c)
-			do output.push(d)
 
-			if(not second.empty) {
-				e = second.pop
-				do output.push(e)
+			if (not second.empty) {
+				d = second.pop
+				do output.push(d)
+
+				if (not second.empty) {
+					e = second.pop
+					do output.push(e)
+				}
 			}
+		
 		}
 	}
 }
