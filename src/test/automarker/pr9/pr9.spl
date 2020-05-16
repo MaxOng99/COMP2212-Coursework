@@ -15,4 +15,5 @@ if (not in.empty) {
 		do output.push(counter)
 	}
 }
+
 return output

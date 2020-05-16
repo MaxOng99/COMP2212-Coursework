@@ -15,12 +15,12 @@ if (not in.empty) {
 
 				if (not first.empty) {
 					do first.pop
-					flag = not flag
 				}
 			}
 			if (not first.empty) {
 				a = first.pop
 				do output.push(a)
+				flag = not flag
 			}
 		}
 	}

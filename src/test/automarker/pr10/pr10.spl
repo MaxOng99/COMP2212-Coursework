@@ -1,0 +1,87 @@
+Int[][] in = sequences
+Int[] output = []
+Int[] fib = []
+
+if (not in.empty) {
+
+	%% Creating new double list
+	Int[][] tempMatrix = sequences
+	Int[][] coefficientMatrix = sequences
+	do coefficientMatrix.pop
+	do tempMatrix.pop
+	
+	%% Creating fibonacci sequence
+	Int[] first = in.pop
+	do in.push(first)
+	Int prev = 0
+	Int currentSum = 1
+	Int firstLength = first.length
+	do fib.push(1)
+
+	while((firstLength - 1)  > 0) {
+		Int temp = fib.pop
+		do fib.push(temp)
+		currentSum = currentSum + prev
+		do fib.push(currentSum)
+		prev = temp
+		firstLength = firstLength - 1
+	}
+
+	%% Generating coefficients
+	firstLength = first.length
+	Int inputSize = first.length
+	Int[] duplicate = []
+	duplicate = fib
+	Int currentPosition = 0
+	
+	while (inputSize > 0) {
+		
+		Int[] coefficientList = []
+		while (firstLength - currentPosition > 1) {
+			do duplicate.pop
+			firstLength = firstLength - 1
+		}
+	
+		while(not duplicate.empty) {
+			Int temp = duplicate.pop
+			do coefficientList.push(temp)
+		}
+
+		do tempMatrix.push(coefficientList)	
+		duplicate = fib
+		currentPosition = currentPosition + 1
+		inputSize = inputSize - 1
+		firstLength = first.length
+	}	
+
+	%% Reverse coefficientMatrix
+	Int tempMatrixSize = tempMatrix.length
+	while (tempMatrixSize > 0) {
+
+		Int[] tempCoefficientList = tempMatrix.pop
+		Int[] finalCoefficientList = []
+		while(not tempCoefficientList.empty) {
+			Int poppedNum = tempCoefficientList.pop
+			do finalCoefficientList.push(poppedNum)
+		}
+		do coefficientMatrix.push(finalCoefficientList)
+		tempMatrixSize = tempMatrixSize - 1
+	}
+
+	%% Calculating output
+	Int matrixSize = coefficientMatrix.length
+	while (not coefficientMatrix.empty) {
+		
+		Int[] list = coefficientMatrix.pop
+		Int sumOfTerms = 0
+		while (not list.empty) {
+			Int coefficient = list.pop
+			Int inputNum = first.pop
+			sumOfTerms = sumOfTerms + (inputNum*coefficient)
+		}
+		do output.push(sumOfTerms)
+		first = in.pop
+		do in.push(first)
+	}
+}
+return output
